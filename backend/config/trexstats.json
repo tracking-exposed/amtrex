@@ -1,0 +1,43 @@
+{
+    "mongoHost": "localhost",
+    "mongoPort": "27017",
+    "mongoDb": "amtrex",
+
+    "stats": [ {
+        "name": "supporters",
+        "column": "supporters",
+        "timevar": "creationTime",
+        "variables": [
+            {
+                "name": "newcomers",
+                "selector": {}
+            },
+            {
+                "name": "total",
+                "selector": { }
+            }
+        ]
+    }, {
+        "name": "processing",
+        "column": "htmls",
+        "timevar": "savingTime",
+        "variables": [
+            {
+                "name": "successful",
+                "selector": { "processed": true }
+            },
+            {
+                "name": "failure",
+                "selector": { "processed": false }
+            },
+            {
+                "name": "unprocessed",
+                "selector": { "processed": { "$exists": false } }
+            },
+            {
+                "name": "total",
+                "selector": { }
+            }
+        ]
+    }]
+}
