@@ -1,0 +1,2 @@
+# amtrex
+amazon.tracking.exposed
