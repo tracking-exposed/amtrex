@@ -22,3 +22,5 @@ typings/
 # Optional eslint cache
 extension/.eslintcache
 
+extension/build/*
+extension/dist/*
