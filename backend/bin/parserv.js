@@ -10,10 +10,6 @@ const automo = require('../lib/automo')
 
 nconf.argv().env().file({ file: 'config/settings.json' });
 
-/* const echoes = require('../lib/echoes');
-echoes.addEcho("elasticsearch");
-echoes.setDefaultEcho("elasticsearch"); */
-
 const FREQUENCY = _.parseInt(nconf.get('frequency')) ? _.parseInt(nconf.get('frequency')) : 10;
 const backInTime = _.parseInt(nconf.get('minutesago')) ? _.parseInt(nconf.get('minutesago')) : 10;
 const id = nconf.get('id');

@@ -9,7 +9,6 @@ const fs = Promise.promisifyAll(require('fs'));
 
 const videoparser = require('../parsers/video');
 const mongo = require('./mongo');
-const echoes = require('./echoes');
 
 nconf.argv().env().file({ file: 'config/content.json' });
 
@@ -44,33 +43,6 @@ function checkMetadata(impression, repeat) {
 
 function logSummary(blobs) {
     return null;
-    /* echoes to ELK */
-    
-    _.each(blobs.summary, function(e) {
-        echoes.echo(
-            _.extend({'index': 'parserv' },
-            _.pick(e, ['errors', 'type', 'publicationTime', 'postId',
-                       'permaLink', 'author', 'textlength', 'impressionTime',
-                       'impressionOrder', 'pseudo', 'timeline', 'regexp' ])
-            )
-        );
-    });
-
-    /* the `fulldump` is set by executers or by `parsers/precise.js` */
-    if(nconf.get('fulldump'))
-        _.times(_.size(blobs.metadata), function(o, i) {
-            let s = _.nth(blobs.summary, i);
-            console.log(JSON.stringify(s, undefined, 1));
-            console.log("\x1b[36m");
-            let m = _.nth(blobs.metadata, i);
-            console.log(JSON.stringify(m, undefined, 1));
-        });
-
-    /* this is dumped even without fulldump */
-    const E = "\x1b[47m\x1b[31m";
-    _.each(blobs.errors, function(o) {
-        console.log(E, JSON.stringify(o, undefined, 2));
-    });
 }
 
 function save(envelop) {
