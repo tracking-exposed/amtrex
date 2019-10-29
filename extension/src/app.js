@@ -67,7 +67,6 @@ function boot () {
         // Lookup the current user and decide what to do.
         localLookup(response => {
             // `response` contains the user's public key and its status,
-            adMonitor();
             hrefUpdateMonitor();
             flush();
         });
@@ -192,8 +191,7 @@ function buildSpan(c) {
     infospan.fadeOut({ duration: c.duration});
 }
 
-const adPeriodicTimeout = 1000;
-const videoPeriodicTimeout = 8000;
+const videoPeriodicTimeout = 5000;
 var lastVideoURL = null;
 var lastVideoCNT = 0;
 function hrefUpdateMonitor() {
@@ -227,7 +225,7 @@ function hrefUpdateMonitor() {
                 console.log("Selector match in ",
                     window.location.href,
                     ", sending",
-                    _.size($('ytd-app').html()),
+                    _.size($('body').html()),
                     " <- ",
                     $(AMZ_TITLE_SELECTOR).length,
                     $(AMZ_TITLE_SELECTOR).text()
