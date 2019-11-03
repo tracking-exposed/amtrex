@@ -13,8 +13,6 @@ const nextApiList = [
 
 var apiListVersion1 = {
     /* POST from the web-extension */
-    processEvents:    require('../routes/events').processEvents,
-    /* processInput is the second version of events */
     processEvents2:   require('../routes/events').processEvents2,
     getMirror:        require('../routes/events').getMirror,
 

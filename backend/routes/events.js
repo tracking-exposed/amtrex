@@ -186,68 +186,6 @@ async function processEvents2(req) {
     }};
 };
 
-function processEvents(req) {
-
-    var headers = processHeaders(_.get(req, 'headers'), hdrs);
-
-    if(headers.error)
-        return headerError(headers);
-
-    return mongo
-        .read(nconf.get('schema').supporters, {
-            publicKey: headers.publickey
-        })
-        .then(function(supporterL) {
-            if(!_.size(supporterL))
-                return TOFU(headers.publickey);
-            else
-                return supporterL;
-        })
-        .then(_.first)
-        .then(function(supporter) {
-            if (!utils.verifyRequestSignature(req)) {
-                debug("Verification fail for use [%s] (signature %s)",
-                    supporter.p, headers.signature);
-                throw new Error('Signature does not match request body');
-            }
-            supporter.version = headers.version;
-            supporter.lastActivity = new Date();
-
-            return mongo.updateOne(nconf.get('schema').supporters, {
-                publicKey: supporter.publicKey
-            }, supporter);
-        })
-        .tap(function(supporter) {
-            /* directory check */
-            var ddest = path.join( nconf.get('storage'), moment().format("YYYY-MM-DD"));
-            return fs
-                .mkdirAsync(ddest).catch(function(e) { });
-        })
-        .then(function(supporter) {
-            // this is necessary for the mirror functionality
-            appendLast(req);
-
-            return Promise.map(req.body, function(video) {
-                return saveVideo(video, supporter);
-            })
-            .then(function(results) {
-                /* this is what returns to the web-extension */
-                return { json: {
-                    status: "OK",
-                    supporter: supporter,
-                    results: results
-                }};
-            });
-        })
-        .catch(function(error) {
-            debug("Error in managing submission: %s", error.message);
-            return { json: {
-                status: 'error',
-                info: error.message
-            }};
-        });
-};
-
 const hdrs =  {
     'content-length': 'length',
     'x-yttrex-build': 'build',
@@ -272,7 +210,6 @@ function TOFU(pubkey) {
 
 
 module.exports = {
-    processEvents: processEvents,
     processEvents2,
     saveVideo,
     getMirror,
