@@ -72,7 +72,7 @@ async function newLoop() {
 
     const analysis = _.map(htmls.content, function(e) { 
         const envelop = {
-            impression: _.omit(e, ['html','publicKey', '_id']),
+            impression: _.omit(e, ['html', '_id']),
             jsdom: new JSDOM(e.html.replace(/\n\ +/g, ''))
                     .window.document,
         }
@@ -86,17 +86,8 @@ async function newLoop() {
                 e.packet, e.incremental,
                 e.href.replace(/https:\/\//, ''), e.size, e.selector);
 
-            if(e.selector == ".ytp-title-channel") {
-                metadata = videoparser.adTitleChannel(envelop);
-            }
-            else if(e.selector == ".video-ads.ytp-ad-module") {
-                metadata = videoparser.videoAd(envelop);
-            }
-            else if(e.selector == "ytd-app") {
-                metadata = videoparser.process(envelop);
-            }
-            else if(e.selector == ".ytp-ad-player-overlay-instream-info") {
-                metadata = videoparser.overlay(envelop);
+            if(e.selector == "body") {
+                metadata = videoparser.product(envelop);
             }
             else {
                 console.log("Selector not supported!", e.selector);

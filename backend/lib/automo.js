@@ -24,35 +24,20 @@ async function getSummaryByPublicKey(publicKey, options) {
     if(!supporter || !supporter.publicKey)
         throw new Error("Authentication failure");
 
-    const metadata1 = await mongo3.readLimit(mongoc,
-        nconf.get('schema').metadata, { watcher: supporter.p }, { savingTime: -1 },
-        options.amount, options.skip);
-    const metadata2 = await mongo3.readLimit(mongoc,
+    const metadata = await mongo3.readLimit(mongoc,
         nconf.get('schema').metadata, { publicKey: supporter.publicKey }, { savingTime: -1 },
         options.amount, options.skip);
 
-    const total1 = await mongo3.count(mongoc,
-        nconf.get('schema').metadata, { watcher: supporter.p });
-    const total2 = await mongo3.count(mongoc,
-        nconf.get('schema').metadata, { publicKey: supporter.publicKey, title: {
+    const total = await mongo3.count(mongoc,
+        nconf.get('schema').metadata, { publicKey: supporter.publicKey, productName: {
             $exists: true
         } });
 
     await mongoc.close();
 
-    // TODO remove any ref to v1
-    // This is an horrible way to manage the two versions, but ATM :shrug emoji:
-    debug("Temporarly workaround: data [v1 %d v2 %d], totals [%d %d]",
-        _.size(metadata1), _.size(metadata2),
-        total1, total2);
-
-    const metadata = _.sortBy(_.concat(metadata1, metadata2), { savingTime: 1});
-    const total = total1 + total2;
-
-    const fields = ['id','videoId', 'savingTime', 'title', 'authorName', 'authorSource', 'relative', 'relatedN' ];
     const recent = _.map(metadata, function(e) {
         e.relative = moment.duration( moment(e.savingTime) - moment() ).humanize() + " ago";
-        return _.pick(e, fields);
+        return e;
     })
     return { supporter, recent, total };
 }
