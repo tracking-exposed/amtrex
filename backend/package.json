@@ -5,7 +5,7 @@
   "scripts": {
     "watch": "key=fuffa nodemon DEBUG=lib:*,amtrex --config config/nodemon.json bin/server",
     "start": "DEBUG=*,-lib:mongo node bin/server",
-    "parserv": "DEBUG=* node bin/parserv",
+    "parserv": "DEBUG=* node bin/parserv2",
     "stat": "DEBUG=* node bin/count-o-clock"
   },
   "author": "Claudio Agosti <claudio@tracking.exposed> and https://github.com/tracking-exposed/amtrex/graphs/contributors",

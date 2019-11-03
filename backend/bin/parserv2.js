@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 const _ = require('lodash');
 const moment = require('moment');
-const debug = require('debug')('bin:parserv');
+const debug = require('debug')('bin:parse2');
 const nconf = require('nconf');
 const JSDOM = require('jsdom').JSDOM;
 
@@ -9,6 +9,10 @@ const videoparser = require('../parsers/video')
 const automo = require('../lib/automo')
 
 nconf.argv().env().file({ file: 'config/settings.json' });
+
+/* const echoes = require('../lib/echoes');
+echoes.addEcho("elasticsearch");
+echoes.setDefaultEcho("elasticsearch"); */
 
 const FREQUENCY = _.parseInt(nconf.get('frequency')) ? _.parseInt(nconf.get('frequency')) : 10;
 const backInTime = _.parseInt(nconf.get('minutesago')) ? _.parseInt(nconf.get('minutesago')) : 10;
@@ -44,8 +48,8 @@ async function newLoop() {
     const htmls = await automo.getLastHTMLs(htmlFilter);
     if(!_.size(htmls.content)) {
         nodatacounter++;
-        if( (nodatacounter % 10) == 0) {
-            debug("%d\tno data at the last query: %j",
+        if( (nodatacounter % 10) == 1) {
+            debug("%d no data at the last query: %j",
                 nodatacounter, htmlFilter);
         }
         lastExecution = moment().subtract(2, 'm').toISOString();
@@ -72,11 +76,7 @@ async function newLoop() {
             jsdom: new JSDOM(e.html.replace(/\n\ +/g, ''))
                     .window.document,
         }
-        envelop.impression.videoId = _
-            .replace(e.href, /.*v=/, '')
-            .replace(/\?.*/, '')
-            .replace(/\&.*/,'');
-
+      
         let metadata = null;
         try {
             debug("%s [%s] %s %d.%d %s %s %s",
@@ -111,28 +111,21 @@ async function newLoop() {
             return null;
         }
 
-        metadata.href = _
-            .replace(e.href, /\?.*/, '')
-            .replace(/\&.*/,'');
-
-        return [ e, _.omit(metadata, ['html']) ];
+        return [ envelop.impression, _.omit(metadata, ['html']) ];
     });
 
-    /* this is meant to execute one db-access per time,
-     * and avoid any collision behavior. */
-    _.compact(analysis).reduce( (previousPromise, blob) => {
-        return previousPromise.then(() => {
-            return automo.updateMetadata(blob[0], blob[1]);
-        });
-    }, Promise.resolve());
+    const meaningful = _.compact(analysis);
+
+    for (const entry of meaningful) {
+        await automo.updateMetadata(entry[0], entry[1]);
+    }
 
     /* reset no-data-counter if data has been sucessfully processed */
     if(_.size(_.compact(analysis)))
         nodatacounter = 0;
 
-    /* also the HTML cutted off the pipeline, the many
-     * skipped by _.compact all the null in the lists,
-     * should be marked as processed */
+    /* also the HTML cutted off the pipeline, the many skipped 
+     * by _.compact all the null in the lists, should be marked as processed */
     const remaining = _.reduce(_.compact(analysis), function(memo, blob) {
         return _.reject(memo, { id: blob[0].id });
     }, htmls.content);
@@ -140,11 +133,9 @@ async function newLoop() {
     debug("Usable HTMLs %d/%d - marking as processed the useless %d HTMLs", 
         _.size(_.compact(analysis)), _.size(htmls.content), _.size(remaining));
 
-    _.reduce(remaining, (previousPromise, html) => {
-        return previousPromise.then(() => {
-            return automo.updateMetadata(html, null);
-        });
-    }, Promise.resolve());
+    for (const html in remaining) {
+        await automo.updateMetadata(html, null);
+    }
 
     if(!singleUse || htmls.overflow) {
         await sleep(FREQUENCY * 1000)

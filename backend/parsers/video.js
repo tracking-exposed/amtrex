@@ -230,7 +230,11 @@ function mineAuthorInfo(D) {
     }
 }
 
-function processVideo(D) {
+function processProduct(D) {
+
+    debugger;
+    console.log("nooooo");
+    process.exit(1);
 
     const title = manyTries(D, [{
         name: 'title h1',
