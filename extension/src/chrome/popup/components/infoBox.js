@@ -18,7 +18,9 @@ const InfoBox = React.createClass({
         return (
             <Card style={cardStyle}>
                 <a target='_blank' href={personalLink}>
-                    <img style={imgstyle} src='/yttrex-logo.png' />
+                <h1>This extension should not be used by anyone except researchers</h1>
+                <p>Currently we lack of documenting the proper data processing, therefore this extension is not ready to be used</p>
+                <p>If you use this, is because you are collaboring with the development team.</p>
                 </a>
             </Card>
         );
