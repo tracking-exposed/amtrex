@@ -53,7 +53,7 @@ function boot () {
         }
     } else if(_.endsWith(window.location.origin, 'amazon.com')) {
         // this get executed only on amazon.com
-        console.log(`amtrex version ${config.VERSION} ${config}`);
+        console.log(`amtrex version ${config.VERSION} ${JSON.stringify(config, undefined, 2)}`);
 
         // status update messages appearing on the right bottom
         // visibile when the recording is triggered.
@@ -123,13 +123,13 @@ function videoSeen(path) {
     buildSpan({
         path,
         position: 2,
-        text: 'video seen',
+        text: 'page seen',
         duration: 11500,
     });
     $("#video-seen").css('background-color', 'green');
     $("#video-seen").css('cursor', 'cell');
     $("#video-seen").click(function() {
-        if( testElement($('ytd-app').html(), 'ytd-app') ) {
+        if( testElement($('body').html(), 'body') ) {
             phase('video.send');
         }
     })
@@ -213,7 +213,7 @@ function hrefUpdateMonitor() {
         if(!diff) {
             lastVideoCNT++;
             if(lastVideoCNT > 5) {
-                console.log(lastVideoCNT, "too many repetition: stop");
+                // console.log(lastVideoCNT, "too many repetition: stop");
                 return;
             }
         }
