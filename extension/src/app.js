@@ -53,7 +53,7 @@ function boot () {
         }
     } else if(_.endsWith(window.location.origin, 'amazon.com')) {
         // this get executed only on amazon.com
-        console.log(`amtrex version ${config.VERSION} ${JSON.stringify(config, undefined, 2)}`);
+        console.log(`amtrex version ${config.VERSION}`);
 
         // status update messages appearing on the right bottom
         // visibile when the recording is triggered.

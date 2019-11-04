@@ -5,7 +5,7 @@
 
   "short_name": "amazon.tracking.exposed",
   "description": "A tool for academic researchers. Part of the tracking.exposed project, is meant to analyze the algorithm of a popular retail portal.",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "author": "The team of https://tracking.exposed",
 
   "icons": {

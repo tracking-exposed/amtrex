@@ -35,8 +35,8 @@ const PATHS = {
 
 /** EXTERNAL DEFINITIONS INJECTED INTO APP **/
 var DEV_SERVER =  'localhost'
-var ENV_DEP_SERVER = DEVELOPMENT ? 'http://' + DEV_SERVER + ':11000' : 'https://amazon.tracking.exposed';
-var ENV_DEP_WEB = DEVELOPMENT ? 'http://' + DEV_SERVER + ':1313' : 'https://amanzon.tracking.exposed';
+var ENV_DEP_SERVER = DEVELOPMENT ? 'http://' + DEV_SERVER + ':11000' : 'https://collector.facebook.tracking.exposed/amazon';
+var ENV_DEP_WEB = DEVELOPMENT ? 'http://' + DEV_SERVER + ':1313' : 'https://facebook.tracking.exposed/amazon';
 
 const DEFINITIONS = {
     'process.env': {
