@@ -1,6 +1,6 @@
 {
   "name": "amtrex",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "amtrex is for https://amazon.tracking.exposed, an extension and backend developed in node to perform amazon algorithm analysis. It is part of the https://tracking.exposed",
   "homepage": "https://amazon.tracking.exposed",
   "bugs": "https://github.com/tracking-exposed/amtrex/issues",
