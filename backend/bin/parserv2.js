@@ -20,6 +20,7 @@ const id = nconf.get('id');
 let singleUse = !!nconf.get('single');
 let nodatacounter = 0;
 let lastExecution = moment().subtract(backInTime, 'minutes').toISOString();
+let computedFrequency = FREQUENCY;
 
 if(backInTime != 10) {
     const humanized = moment.duration(
@@ -53,14 +54,16 @@ async function newLoop() {
                 nodatacounter, htmlFilter);
         }
         lastExecution = moment().subtract(2, 'm').toISOString();
-        await sleep(FREQUENCY * 1000)
-        /* infinite recursive loop */
-        await newLoop();
+        computedFrequency = FREQUENCY;
+        return;
+    } else {
+        computedFrequency = 0.5;
     }
 
     if(!htmls.overflow) {
         lastExecution = moment().subtract(2, 'm').toISOString();
-        debug("Matching objects %d, overflow %s",
+        debug("[%s] Matching objects %d, overflow %s",
+            moment.duration(htmls.content[0].savingTime).humanize(),
             _.size(htmls.content), htmls.overflow);
     }
     else {
@@ -94,7 +97,7 @@ async function newLoop() {
                 return null;
             }
 
-            if(_.isNull(metadata))
+            if(!metadata)
                 return null;
 
         } catch(error) {
@@ -102,12 +105,11 @@ async function newLoop() {
             return null;
         }
 
-        return [ envelop.impression, _.omit(metadata, ['html']) ];
+        return [ envelop.impression, metadata ];
     });
 
-    const meaningful = _.compact(analysis);
 
-    for (const entry of meaningful) {
+    for (const entry of _.compact(analysis)) {
         await automo.updateMetadata(entry[0], entry[1]);
     }
 
@@ -127,14 +129,6 @@ async function newLoop() {
     for (const html in remaining) {
         await automo.updateMetadata(html, null);
     }
-
-    if(!singleUse || htmls.overflow) {
-        await sleep(FREQUENCY * 1000)
-        await newLoop();
-    } else {
-        console.log("Single execution done!")
-        process.exit(0);
-    }
 }
 
 function sleep(ms) {
@@ -143,8 +137,19 @@ function sleep(ms) {
     })
 }
 
+async function wrapperLoop() {
+    while(true) {
+        await newLoop();
+        if(singleUse) {
+            console.log("Single execution done!")
+            process.exit(0);
+        }
+        await sleep(computedFrequency * 1000)
+    }
+}
+
 try {
-    newLoop();
+    wrapperLoop();
 } catch(e) {
     console.log("Error in newLoop", e.message);
 }
