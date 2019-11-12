@@ -115,7 +115,7 @@ function videoWait(path) {
     buildSpan({
         path,
         position: 1,
-        text: 'video wait',
+        text: 'page wait',
         duration: 400,
     });
 }
@@ -138,7 +138,7 @@ function videoSend(path) {
     buildSpan({
         path,
         position: 3,
-        text: 'video send',
+        text: 'page send',
         duration: 400,
     });
     $("#video-seen").css('background-color', 'red');
@@ -169,12 +169,12 @@ function buildSpan(c) {
         infospan.setAttribute('id', id);
         infospan.style.position = 'fixed';
         infospan.style.width = '80px';
-        infospan.style.height = '10px';
+        infospan.style.height = '20px';
         infospan.style.right = '5px';
         infospan.style.color = 'lightgoldenrodyellow';
         infospan.style.bottom = (c.position * 16) + 'px';
-        infospan.style.size = '0.7em';
-        infospan.style.padding = '2px';
+        infospan.style.size = '0.6em';
+        infospan.style.padding = '4px';
         infospan.style['border-radius'] = '10px';
         infospan.style.background = '#707ddad1';
         infospan.textContent = fullt;
@@ -213,7 +213,7 @@ function hrefUpdateMonitor() {
         if(!diff) {
             lastVideoCNT++;
             if(lastVideoCNT > 5) {
-                // console.log(lastVideoCNT, "too many repetition: stop");
+                console.log(lastVideoCNT, "too many repetition: stop");
                 return;
             }
         }
@@ -222,14 +222,9 @@ function hrefUpdateMonitor() {
         document
             .querySelectorAll(AMZ_TITLE_SELECTOR)
             .forEach(function() {
-                console.log("Selector match in ",
-                    window.location.href,
-                    ", sending",
-                    _.size($('body').html()),
-                    " <- ",
-                    $(AMZ_TITLE_SELECTOR).length,
-                    $(AMZ_TITLE_SELECTOR).text()
-                );
+                console.log("Selector match in ", window.location.href,
+                    ", sending", _.size($('body').html()),
+                    " <- size:", $(AMZ_TITLE_SELECTOR).length);
                 if( testElement($('body').html(), 'body') )
                     phase('video.send');
             });

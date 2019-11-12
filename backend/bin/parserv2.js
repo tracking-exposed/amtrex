@@ -7,6 +7,7 @@ const JSDOM = require('jsdom').JSDOM;
 
 const videoparser = require('../parsers/video')
 const automo = require('../lib/automo')
+const downloader = require('../parsers/downloader');
 
 nconf.argv().env().file({ file: 'config/settings.json' });
 
@@ -75,30 +76,35 @@ async function newLoop() {
 
     const analysis = _.map(htmls.content, function(e) { 
         const envelop = {
-            impression: _.omit(e, ['html', '_id']),
+            impression: e,
             jsdom: new JSDOM(e.html.replace(/\n\ +/g, ''))
                     .window.document,
         }
       
         let metadata = null;
         try {
-            debug("%s [%s] %s %d.%d %s %s %s",
+            debug("%s [%s] %s %d.%d %s %s",
                 e.id.substr(0, 4),
-                moment(e.savingTime).format("HH:mm"),
+                moment(e.savingTime).format("HH:mm:ss"),
                 e.metadataId.substr(0, 6),
                 e.packet, e.incremental,
-                e.href.replace(/https:\/\//, ''), e.size, e.selector);
+                e.size, e.selector);
 
             if(e.selector == "body") {
                 metadata = videoparser.product(envelop);
+
+                if(metadata && _.size(metadata.relate) == 0)
+                    debug("Missing related content in evidence %s", e.id);
             }
             else {
                 console.log("Selector not supported!", e.selector);
                 return null;
             }
 
-            if(!metadata)
+            if(!metadata) {
+                debug("! failure in extraction");
                 return null;
+            }
 
         } catch(error) {
             debug("Error in video processing: %s (%s)", error, e.selector);
@@ -108,6 +114,12 @@ async function newLoop() {
         return [ envelop.impression, metadata ];
     });
 
+
+    let downloads = 0;
+    for (const entry of _.compact(analysis)) {
+        downloads += await downloader.update(entry);
+    }
+    debug("performed %d downloads", downloads);
 
     for (const entry of _.compact(analysis)) {
         await automo.updateMetadata(entry[0], entry[1]);

@@ -1,20 +1,14 @@
-var _ = require('lodash');
-var moment = require('moment');
-var Promise = require('bluebird');
-var debug = require('debug')('lib:events');
-var os = require('os');
-
-var fs = Promise.promisifyAll(require('fs'));
-var path = require('path');
-var nconf = require('nconf');
-
-var signer = require('nacl-signature');
-var bs58 = require('bs58');
+const _ = require('lodash');
+const moment = require('moment');
+const debug = require('debug')('lib:events');
+const nconf = require('nconf');
+const signer = require('nacl-signature');
+const bs58 = require('bs58');
 
 const automo = require('../lib/automo');
-var mongo = require('../lib/mongo');
-var utils = require('../lib/utils');
-var security = require('../lib/security');
+const utils = require('../lib/utils');
+const security = require('../lib/security');
+
 
 function processHeaders(received, required) {
     var ret = {};
@@ -33,54 +27,6 @@ function processHeaders(received, required) {
     }
     return ret;
 };
-
-function saveVideo(body, supporter) {
-
-    var id = utils.hash({
-        pubkey: supporter.publicKey,
-        href: body.href,
-        hour: moment(body.clientTime).format("YYYY-MM-DD HH:mm:SS"),
-    });
-    var isVideo = body.href.match(/v=/) ? true : false;
-    var fdest = path.join(
-        nconf.get('storage'), moment().format("YYYY-MM-DD"), `${id}.html`
-        //    htmls /           2019-01-01         / $hash.html
-    );
-    var video = {
-        id: id,
-        href: body.href,
-        isVideo,
-        htmlOnDisk: fdest,
-        p: supporter.p,
-        clientTime: new Date(body.clientTime),
-        savingTime: new Date(),
-    };
-
-    if(supporter.tag)
-        video.tagId = supporter.tag.id;
-
-    if(isVideo)
-        video.videoId = _.replace(body.href, /.*v=/, '').replace(/\?.*/, '').replace(/\&.*/,'');
-
-    debug("Saving entry (video: %s) user %s tag: %s file %s (%d bytes)",
-        isVideo ? video.videoId : "false", supporter.p,
-        supporter.tag ? supporter.tag.name : "<none>",
-        fdest, _.size(body.element)
-    );
-
-    return mongo
-        .writeOne(nconf.get('schema').videos, video)
-        .then(function() {
-            return fs
-                .writeFileAsync(fdest, body.element)
-                .return(true);
-        })
-        .catch(function(error) {
-            debug("Error in saveVideo: %s", error.message);
-            return false;
-        });
-};
-
 
 var last = null;
 function getMirror(req) {
@@ -211,9 +157,8 @@ function TOFU(pubkey) {
 
 module.exports = {
     processEvents2,
-    saveVideo,
     getMirror,
-    hdrs: hdrs,
-    processHeaders: processHeaders,
+    hdrs,
+    processHeaders,
     TOFU: TOFU
 };

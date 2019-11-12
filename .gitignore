@@ -10,7 +10,7 @@ build/Release
 
 # Dependency directories
 backend/node_modules/
-extension/node_modules/
+backend/pictures/
 jspm_packages/
 
 # TypeScript v1 declaration files
@@ -21,6 +21,8 @@ typings/
 
 # Optional eslint cache
 extension/.eslintcache
-
 extension/build/*
 extension/dist/*
+extension/node_modules/
+
+

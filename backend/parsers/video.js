@@ -41,27 +41,32 @@ function product(envelop) {
         sections = _.map(D.querySelectorAll('h2.a-carousel-heading'), function(entry) {
             // > D.querySelectorAll('h2.a-carousel-heading')[0].textContent
             // '4 stars and aboveSponsored'
-            return entry.textContent.replace(/Sponsored/, '');
+            return entry.textContent.replace(/Sponsored^/i, '');
         });
 
-        related = _.map(D.querySelectorAll('.sponsored-products-truncator-truncated'), function(entry) {
-            let name = entry.textContent.replace(/\ \ */, '');
-            let link = entry.parentNode.getAttribute('href');
+        related = _.compact(_.map(D.querySelectorAll('[href^="/product-review"]'), function(entry) {
+
+            if(entry.parentNode.parentNode.tagName != 'DIV')
+                return null;
+
+            let grandptag = entry.parentNode.parentNode.tagName;
+            let name = entry.parentNode.parentNode.children[0].textContent;
+            let link = entry.parentNode.parentNode.children[0].getAttribute('href');
             let chunks = link.split('/');
             let params = querystring.parse(_.last(chunks));
 
-            let cost = entry.parentNode.parentNode.outerHTML.replace(/.*a-color-price">/, '').replace(/<.*/, '');
+            let cost = entry.parentNode.parentNode.outerHTML.replace(/.*-price">/, '').replace(/<.*/, '');
             let dollars = _.reduce(cost.replace(/\$/, '').split('.'), function(memo, decimal, position) {
-                // mmh...?
                 const value = _.round(decimal * ( position == 0 ? 1 : 0.01 ), 2);
                 memo += value;
                 return memo;
             }, 0);
+            // debug("cost %s = dollars %d", cost, dollars);
 
             let thumbnail = entry.parentNode.parentNode.outerHTML.replace(/.*src="/, '').replace(/".*/, '');
 
-            return { name, link, chunks, cost, params, dollars, thumbnail };
-        });
+            return { name, grandptag, link, chunks, cost, params, dollars, thumbnail };
+        }));
     } catch(error) {
         debug(`Unable to mine related: ${error.message}, ${error.stack.substr(0, 220)}...`);
         return null;
