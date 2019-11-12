@@ -80,23 +80,25 @@ async function getLast(req) {
 };
 
 async function getVideoId(req) {
+    // of course changed to work with productId but all the keywords are the same 
     const { amount, skip } = params.optionParsing(req.params.paging, PUBLIC_AMOUNT_ELEMS);
     debug("getVideoId %s amount %d skip %d default %d",
         req.params.query, amount, skip, PUBLIC_AMOUNT_ELEMS);
 
-    const entries = await automo.getMetadataByFilter({ videoId: req.params.query}, { amount, skip });
-    const evidences = _.map(entries, function(meta) {
-        meta.related = _.map(meta.related, function(e) {
-            let rv = _.merge(e, e.mined);
-            _.unset(rv, 'mined');
-            _.unset(rv, 'longlabel');
-            return rv;
-        });
-        meta.related = _.reverse(meta.related);
-        _.unset(meta, '_id');
-        return meta;
+    const entries = await automo.getMetadataByFilter({ productId: req.params.query}, { amount, skip });
+    let sidecounter = [];
+    const evidences = _.map(entries, function(e) {
+        sidecounter.push(_.size(_.map(e.related, 'name')));
+        return {
+            productName: e.productName,
+            productId: e.productId,
+            publicKey: e.publicKey,
+            id: e.id,
+            savingTime: e.savingTime,
+            recommended: _.map(e.related, 'name')
+        }
     });
-    debug("getVideoId: found %d matches about %s", _.size(evidences), req.params.query);
+    debug("getVideoId found %d entries and %j recommended", _.size(evidences), sidecounter);
     return { json: evidences };
 };
 

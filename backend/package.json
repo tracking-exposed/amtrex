@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "description": "amazon.tracking.exposed - backend data collector",
   "scripts": {
-    "watch": "key=fuffa nodemon DEBUG=lib:*,amtrex --config config/nodemon.json bin/server",
+    "watch": "key=fuffa nodemon DEBUG=* --config config/nodemon.json bin/server",
     "start": "DEBUG=*,-lib:mongo node bin/server",
     "parserv": "DEBUG=* node bin/parserv2",
     "stat": "DEBUG=* node bin/count-o-clock"

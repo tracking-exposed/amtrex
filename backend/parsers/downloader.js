@@ -61,6 +61,7 @@ async function update(metadata) {
             });
     }
 
+    /* this return value isn't working */
     return _.size(downloadable);
 };
 

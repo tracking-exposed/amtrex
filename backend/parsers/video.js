@@ -59,13 +59,26 @@ function findThumbnailURL(e) {
 
 function product(envelop) {
 
-    const chunks = envelop.impression.href.split('/');
     const D = envelop.jsdom;
-
+    const chunks = envelop.impression.href.split('/');
     let productName, 
         sections,
         related,
-        brandUrl;
+        brandUrl,
+        productId;
+
+    if( _.size(chunks[5]) == 10 ) {
+        productId = chunks[5];
+    } else if( _.size(chunks[4]) == 10 ) {
+        productId = chunks[4];
+    } else if( _.size(chunks[5]) > 40) {
+        productId = chunks[5].split('?')[0];
+        debug("Condition-X: %s taking %s",
+            JSON.stringify(chunks[5].split('?'), undefined, 2), productId);
+    }
+
+    if(!productId)
+        debug("productId not found in %j", chunks);
 
     try {
         const t = D.querySelectorAll('h1#title');
@@ -81,7 +94,7 @@ function product(envelop) {
 
         productName = productName.replace(/\n/g, '');
 
-        x = D.querySelectorAll('[data-feature-name="titleBlock"]')
+        // x = D.querySelectorAll('[data-feature-name="titleBlock"]')
 
         const img = D.querySelectorAll('[data-feature-name="titleBlock"] img')[0];
         brandUrl = img ? img.getAttribute('src') : null;
@@ -117,17 +130,17 @@ function product(envelop) {
             }, 0);
             // debug("cost %s = dollars %d", cost, dollars);
 
-            debugger;
             let thumbnail = findThumbnailURL(ref);
-
             return { name, link, chunks, cost, params, dollars, thumbnail };
         }));
+
     } catch(error) {
         debug(`Unable to mine related: ${error.message}, ${error.stack.substr(0, 220)}...`);
         return null;
     }
 
     return {
+        productId,
         chunks,
         productName,
         sections,
