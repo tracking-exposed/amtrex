@@ -47,7 +47,6 @@ async function update(metadata) {
                 return [ response.buffer(), response.headers.raw() ];
             })
             .then(function(response) {
-                retval.fetched++;
                 const destpath = nconf.get('pictures') + '/' + d.id + '.jpg';
                 fs.writeFileSync(destpath, response[0]);
                 return mongo3.writeOne(mongoc, nconf.get('schema').thumbnails, {
