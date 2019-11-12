@@ -16,12 +16,25 @@ async function getPersonal(req) {
     debug("getPersonal: amount %d skip %d, default max %d", amount, skip, DEFMAX);
 
     const data = await automo.getSummaryByPublicKey(k, { amount, skip });
+    const recent = _.map(data.recent, function(e) {
+        if( _.size(e.chunks[5]) == 10 )
+            e.productId = e.chunks[5];
+        if( _.size(e.chunks[4]) == 10 )
+            e.productId = e.chunks[4];
+        if( _.size(e.chunks[5]) > 100)
+            e.productId = e.chunks[5].split('?')[0];
+        if(_.isUndefined(e.productId))
+            debug("Error in %j", e.chunks);
+        return e;
+    });
 
     data.request = {
         amount,
         skip,
         when: moment().toISOString()
     }
+    data.recent = recent;
+
     return { json: data };
 };
 
