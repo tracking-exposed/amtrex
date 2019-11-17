@@ -102,7 +102,7 @@ function product(envelop) {
         sections = _.map(D.querySelectorAll('h2.a-carousel-heading'), function(entry) {
             // > D.querySelectorAll('h2.a-carousel-heading')[0].textContent
             // '4 stars and aboveSponsored'
-            return entry.textContent.replace(/Sponsored^/i, '');
+            return entry.textContent.replace(/Sponsored$/, '');
         });
 
         related = _.compact(_.map(D.querySelectorAll('[href^="/product-review"]'), function(entry) {

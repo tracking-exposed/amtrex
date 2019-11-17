@@ -93,7 +93,7 @@ async function newLoop() {
             if(e.selector == "body") {
                 metadata = videoparser.product(envelop);
 
-                if(metadata && _.size(metadata.relate) == 0)
+                if(metadata && _.size(metadata.related) == 0)
                     debug("Missing related content in evidence %s", e.id);
             }
             else {
