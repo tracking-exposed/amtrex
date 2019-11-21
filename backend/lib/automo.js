@@ -61,13 +61,25 @@ async function getSummaryByPublicKey(publicKey, options) {
 
 async function getMetadataByPublicKey(publicKey, options) {
     const mongoc = await mongo3.clientConnect({concurrency: 1});
+    const SPECIALKEY= "hellyea"
+
+    /* special condition for development purposes */
+    if(publicKey == SPECIALKEY) {
+        const metadata = await mongo3.readLimit(mongoc,
+            nconf.get('schema').metadata, {}, { savingTime: -1 },
+            options.amount, options.skip);
+
+        await mongoc.close();
+        return { supporter: null, metadata };
+    }
+
     const supporter = await mongo3.readOne(mongoc, nconf.get('schema').supporters, { publicKey });
 
     if(!supporter)
         throw new Error("publicKey do not match any user");
 
     const metadata = await mongo3.readLimit(mongoc,
-        nconf.get('schema').metadata, { watcher: supporter.p }, { savingTime: -1 },
+        nconf.get('schema').metadata, { publicKey: supporter.publicKey }, { savingTime: -1 },
         options.amount, options.skip);
 
     await mongoc.close();

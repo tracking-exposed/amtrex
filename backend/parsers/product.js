@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 const _ = require('lodash');
-const debug = require('debug')('parser:video');
+const debug = require('debug')('parser:product');
 const querystring = require('querystring');
 
 const stats = { skipped: 0, error: 0, suberror: 0, success: 0 };
@@ -98,20 +98,19 @@ function product(envelop) {
 
         const img = D.querySelectorAll('[data-feature-name="titleBlock"] img')[0];
         brandUrl = img ? img.getAttribute('src') : null;
+        /*
         const dah = D.querySelector('[data-feature-name="titleBlock"]');
-        const boh = dah.querySelectorAll('[src]');
-
         console.log(!!img, !!dah, !!boh);
         if(dah) {
             console.log(dah.length, boh.length, _.map(boh, 'tagName'));
-        }
+        } */
 
         const sections = _.map(D.querySelectorAll('h2.a-carousel-heading'), function(entry) {
             // > D.querySelectorAll('h2.a-carousel-heading')[0].textContent
             // '4 stars and aboveSponsored'
             let offset = getOffset(D.querySelector('body').outerHTML, entry.outerHTML);
             let catName = entry.textContent.replace(/Sponsored$/, '');
-            console.log(D.querySelector('body').outerHTML.substr(offset, 3000));
+            // console.log(D.querySelector('body').outerHTML.substr(offset - 30, 3000));
             return {
                 category: catName,
                 offset: offset,
@@ -119,11 +118,13 @@ function product(envelop) {
         });
 
         const related = _.compact(_.map(D.querySelectorAll('[href^="/product-review"]'), function(entry) {
+            /* this is a bug, it only extract:
+                Customers who viewed this item also viewed 
+                Inspired by your recent shopping trends
+             */
 
-            if(entry.parentNode.parentNode.tagName != 'DIV') {
-                debug("succede %s", entry.parentNode.parentNode.tagName );
+            if(entry.parentNode.parentNode.tagName != 'DIV')
                 return null;
-            }
             
             let ref = guessTheAnchor(entry);
             /* this function try some combination of 
@@ -200,7 +201,6 @@ function product(envelop) {
         } else {
             footer = false;
         }
-        process.exit(1);
     } catch(error) {
         debug(`Unable to find footer, assument nope: ${error.message}, ${error.stack.substr(0, 220)}...`);
         footer = false;
