@@ -5,7 +5,7 @@ const debug = require('debug')('bin:parse2');
 const nconf = require('nconf');
 const JSDOM = require('jsdom').JSDOM;
 
-const videoparser = require('../parsers/video')
+const amzproduct = require('../parsers/product')
 const automo = require('../lib/automo')
 const downloader = require('../parsers/downloader');
 
@@ -91,9 +91,9 @@ async function newLoop() {
                 e.size, e.selector);
 
             if(e.selector == "body") {
-                metadata = videoparser.product(envelop);
+                metadata = amzproduct.product(envelop);
 
-                if(metadata && _.size(metadata.related) == 0)
+                if(metadata && _.size(metadata.sections) == 0)
                     debug("Missing related content in evidence %s", e.id);
             }
             else {
