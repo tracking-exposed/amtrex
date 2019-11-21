@@ -26,7 +26,24 @@ async function getSummaryByPublicKey(publicKey, options) {
 
     const metadata = await mongo3.readLimit(mongoc,
         nconf.get('schema').metadata, { publicKey: supporter.publicKey }, { savingTime: -1 },
-        options.amount, options.skip);
+        options.amount * 5, options.skip);
+        // this        * 5 is because of the duplication stripping below
+
+    const uniquified = _.reduce(metadata, function(memo, m) {
+        if(!m.productId)
+            return memo;
+
+        if(memo.lastProductId == m.productId)
+            return memo;
+
+        memo.lastProductId = m.productId;
+        memo.acc.push(m);
+        return memo;
+    }, { acc: [], lastProductId: null } );
+
+    const unique = _.take(_.sortBy(uniquified.acc, { savingTime: -1}), options.amount);
+    debug("This should reviewed and made pointless by a more accurate collection - accu %d - returned %d - final %d limit %d",
+        _.size(uniquified.acc), _.size(metadata), _.size(unique), options.amount);
 
     const total = await mongo3.count(mongoc,
         nconf.get('schema').metadata, { publicKey: supporter.publicKey, productName: {
@@ -35,7 +52,7 @@ async function getSummaryByPublicKey(publicKey, options) {
 
     await mongoc.close();
 
-    const recent = _.map(metadata, function(e) {
+    const recent = _.map(unique, function(e) {
         e.relative = moment.duration( moment(e.savingTime) - moment() ).humanize() + " ago";
         return e;
     })
