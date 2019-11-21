@@ -15,9 +15,12 @@ const InfoBox = React.createClass({
         return (
             <Card>
                 <a target='_blank' href={personalLink}>
-                <h1 style={cardStyle}>No one except researchers should use this extension!</h1>
-                <p>Currently, we lack documenting the proper data processing; therefore this extension is not ready to be used</p>
-                <p>If you use this, it is because you are collaborating with the development team.</p>
+                    <h3 style={cardStyle}>No one except researchers should use this extension!</h3>
+                    <smaller>
+                        Currently, we lack documenting the proper data processing; therefore this extension is not ready to be used.
+                        If you use this, it is because you are collaborating with the development team.
+                    </smaller>
+                    <img width="100%" src="/amazon-spy-wired.png" />
                 </a>
             </Card>
         );

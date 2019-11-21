@@ -5,7 +5,7 @@
 
   "short_name": "amazon.tracking.exposed",
   "description": "A tool for academic researchers. Part of the tracking.exposed project, is meant to analyze the algorithm of a popular retail portal.",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "author": "The team of https://tracking.exposed",
 
   "icons": {
@@ -25,6 +25,7 @@
     "tabs",
     "http://localhost:11000/",
     "https://*.amazon.com/",
+    "https://*.amazon.it/",
     "https://*.tracking.exposed/"
   ],
 
@@ -39,7 +40,8 @@
           "http://localhost/*",
           "http://127.0.0.1/*",
           "https://*.tracking.exposed/*",
-          "https://*.amazon.com/*"
+          "https://*.amazon.com/*",
+          "https://*.amazon.it/*"
       ],
       "js": ["./app.js"]
     }

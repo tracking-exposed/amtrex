@@ -28,10 +28,8 @@ import moment from 'moment';
 
 import config from './config';
 import hub from './hub';
-import { getTimeISO8601 } from './utils';
 import { registerHandlers } from './handlers/index';
 
-const AMZ_TITLE_SELECTOR = 'h1#title';
 
 // bo is the browser object, in chrome is named 'chrome', in firefox is 'browser'
 const bo = chrome || browser;
@@ -51,7 +49,7 @@ function boot () {
             // $(".extension-missing").hide();
             return null;
         }
-    } else if(_.endsWith(window.location.origin, 'amazon.com')) {
+    } else if(_.endsWith(window.location.origin, 'amazon.com') || _.endsWith(window.location.origin, 'amazon.it')) {
         // this get executed only on amazon.com
         console.log(`amtrex version ${config.VERSION}`);
 
@@ -219,15 +217,10 @@ function hrefUpdateMonitor() {
         }
 
         lastVideoURL = window.location.href;
-        document
-            .querySelectorAll(AMZ_TITLE_SELECTOR)
-            .forEach(function() {
-                console.log("Selector match in ", window.location.href,
-                    ", sending", _.size($('body').html()),
-                    " <- size:", $(AMZ_TITLE_SELECTOR).length);
-                if( testElement($('body').html(), 'body') )
-                    phase('video.send');
-            });
+        console.log("Sending ", window.location.href, ", sending", _.size($('body').html()), " <- size");
+
+        if( testElement($('body').html(), 'body') )
+            phase('video.send');
 
     }, videoPeriodicTimeout);
 }

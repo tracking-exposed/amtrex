@@ -5,7 +5,7 @@ import Settings from './settings';
 import config from '../../../config';
 
 const styles = {
-    width: "400px",
+    width: "600px",
     'textAlign': "center"
 };
 
@@ -31,7 +31,7 @@ const Popup = React.createClass({
                     <span> </span>
                     <a target="_blank" href="https://github.com/tracking-exposed/yttrex/">
                         free software
-                    </a>, we welcome contributions.
+                    </a> - Illustration above curtesy of <a href="https://www.wired.com/story/amazon-marketplace-apps-privacy/">wired.com</a>.
                 </smaller>
             </div>
         );

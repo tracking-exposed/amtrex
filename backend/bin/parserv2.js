@@ -4,8 +4,10 @@ const moment = require('moment');
 const debug = require('debug')('bin:parse2');
 const nconf = require('nconf');
 const JSDOM = require('jsdom').JSDOM;
+const querystring = require('querystring');
 
 const amzproduct = require('../parsers/product')
+const amzsearch = require('../parsers/search')
 const automo = require('../lib/automo')
 const downloader = require('../parsers/downloader');
 
@@ -28,6 +30,32 @@ if(backInTime != 10) {
         moment().subtract(backInTime, 'minutes') - moment()
     ).humanize();
     console.log(`Considering ${backInTime} minutes (${humanized}), as override the standard 10 minutes ${lastExecution}`);
+}
+
+function parseAmazonURL(href) {
+    const chunks = href.split('/');
+    console.log(JSON.stringify(chunks));
+    const fragment = querystring.parse(_.last(chunks));
+    console.log(JSON.stringify(fragment));
+
+    if(_.startsWith(chunks[3],'s?k')) {
+        return {
+            href,
+            type: 'search',
+            query: fragment['s?k']
+        };
+    } else if(_.size(chunks) === 3) {
+        return {
+            type: 'home',
+            href,
+        };
+    } else {
+        return {
+            type: 'product',
+            href,
+        }
+    }
+
 }
 
 async function newLoop() {
@@ -90,14 +118,20 @@ async function newLoop() {
                 e.packet, e.incremental,
                 e.size, e.selector);
 
-            if(e.selector == "body") {
+            console.log(e.href);
+            const urlInfo = parseAmazonURL(e.href);
+
+            if(urlInfo.type == 'product') {
                 metadata = amzproduct.product(envelop);
 
                 if(metadata && _.size(metadata.sections) == 0)
                     debug("Missing related content in evidence %s", e.id);
+            } else if(urlInfo.type == 'search') {
+
+                metadata = amzsearch.search(envelop);
             }
             else {
-                console.log("Selector not supported!", e.selector);
+                console.log("URL not supported!", e.href);
                 return null;
             }
 
