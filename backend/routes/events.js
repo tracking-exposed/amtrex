@@ -120,7 +120,7 @@ async function processEvents2(req) {
     }
 
     const info = _.map(htmls, function(e) {
-        return [ e.packet, e.size, e.selector ];
+        return [ e.packet, e.size, e.href ];
     })
     debug("%s: %s", supporter.p, JSON.stringify(info));
 
