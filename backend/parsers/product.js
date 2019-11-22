@@ -87,7 +87,8 @@ function product(envelop) {
             debugger;
         }
         if(_.size(t) == 0) {
-            debug("Not a title found in %s", envelop.impression.href );
+            debug("Not a title found in %s -- skipping", envelop.impression.href );
+            return null;
         }
         productName = _.first(t).textContent;
         if(_.size(productName) == 0) {

@@ -59,7 +59,7 @@ async function getLast(req) {
         return formatReturn(cacheFormat);
     }
     else {
-        debug("Returning %d cached random videos", amount)
+        debug("Returning cached search results");
         return formatReturn();
     }
 };
