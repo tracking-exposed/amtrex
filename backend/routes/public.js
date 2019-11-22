@@ -43,7 +43,24 @@ async function getLast(req) {
             type: 'search',
         }, { amount: 40, skip: 0 });
 
-        let freshContent = _.map(last, function(meta) {
+        const uniquified = _.reduce(last, function(memo, m) {
+
+            if(!m.href)
+                return memo;
+
+            if(memo.lastHref == m.href)
+                return memo;
+
+            memo.lastHref = m.href;
+            memo.acc.push(m);
+            return memo;
+        }, { acc: [], lastHref: null } );
+
+        const unique = _.take(_.sortBy(uniquified.acc, { savingTime: -1}), 40);
+        debug("This should reviewed and made pointless by a more accurate collection - accu %d - returned %d - final %d limit 40",
+            _.size(uniquified.acc), _.size(last), _.size(unique));
+
+        let freshContent = _.map(unique, function(meta) {
             const d = moment.duration( moment(meta.savingTime) - moment() );
             meta.timeago = d.humanize() + ' ago';
             meta.pseudo = utils.string2Food(meta.publicKey);
