@@ -46,6 +46,7 @@ async function getLast(req) {
             const d = moment.duration( moment(meta.savingTime) - moment() );
             meta.timeago = d.humanize() + ' ago';
             meta.secondsago = d.asSeconds();
+            meta.results = _.sortBy(meta.results, 'index');
             _.unset(meta, '_id');
             return meta;
         });
