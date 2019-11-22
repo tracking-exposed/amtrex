@@ -269,7 +269,7 @@ async function tofu(publicKey, version) {
 
 async function getLastHTMLs(filter, skip) {
 
-    const HARDCODED_LIMIT = 20;
+    const HARDCODED_LIMIT = 8;
     const mongoc = await mongo3.clientConnect({concurrency: 1});
 
     const htmls = await mongo3.readLimit(mongoc,
