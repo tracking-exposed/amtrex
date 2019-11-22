@@ -37,11 +37,13 @@ function formatReturn(updated) {
 
 async function getLast(req) {
 
+    const amount = req.params.amount ? _.parseInt(req.params.amount) : 40;
+
     if(_.isNull(cache.content) || (cache.next && moment().isAfter(cache.next)) ) {
         // if not initialized ^^^^ or if the cache time is expired: do the query
         const last = await automo.getMetadataByFilter({
             type: 'search',
-        }, { amount: 40, skip: 0 });
+        }, { amount, skip: 0 });
 
         const uniquified = _.reduce(last, function(memo, m) {
 
@@ -56,9 +58,9 @@ async function getLast(req) {
             return memo;
         }, { acc: [], lastHref: null } );
 
-        const unique = _.take(_.sortBy(uniquified.acc, { savingTime: -1}), 40);
-        debug("This should reviewed and made pointless by a more accurate collection - accu %d - returned %d - final %d limit 40",
-            _.size(uniquified.acc), _.size(last), _.size(unique));
+        const unique = _.take(_.sortBy(uniquified.acc, { savingTime: -1}), amount);
+        debug("This should reviewed and made pointless by a more accurate collection - accu %d - returned %d - final %d limit %d",
+            _.size(uniquified.acc), _.size(last), _.size(unique), amount);
 
         let freshContent = _.map(unique, function(meta) {
             const d = moment.duration( moment(meta.savingTime) - moment() );
@@ -74,7 +76,7 @@ async function getLast(req) {
             computedAt: moment(),
             next: moment().add(cache.seconds, 'seconds')
         };
-        debug("Returning %d last research, which become part of a %d minutes long cache",
+        debug("Returning %d last research, which become part of a %f minutes long cache",
             _.size(freshContent), _.map(freshContent, 'title'), _.round(CACHE_SECONDS / 60, 1) );
         return formatReturn(cacheFormat);
     }
@@ -83,6 +85,54 @@ async function getLast(req) {
         return formatReturn();
     }
 };
+
+
+async function getSearchCSV(req) {
+
+    const quanto = await getLast({ params: { amount: 200 }});
+    const produced = _.reduce(quanto.json.content, function(memo, e) {
+        const sequence = _.flatten(_.map(e.results, 'price'));
+        let avg = 0;
+        if(_.size(sequence) > 0) {
+            avg = _.round(_.sum(sequence) / _.size(sequence), 1);
+        }
+        const lines = _.map(e.results, function(r) {
+            let productId = _.size(r.chunks) ? r.chunks[3] : null;
+
+            if(!productId || _.size(productId) != 10)
+                return null;
+
+            return {
+                pseudo: e.pseudo,
+                timeago: e.timeago,
+                query: e.query,
+                savingTime: e.savingTime,
+                order: r.order,
+                index: r.index,
+                rawndx: r.rawndx,
+                product: r.name,
+                productId,
+                value: _.first(r.price),
+                average: avg
+            }
+        });
+
+        memo = _.concat(memo, _.compact(lines));
+        return memo;
+    }, []);
+
+    const csv = CSV.produceCSVv1(produced);
+    if(!_.size(csv))
+        return { text: "Error, Zorry: 🤷" };
+
+    return {
+        headers: {
+            "Content-Type": "csv/text",
+            "Content-Disposition": "attachment; filename=full-search.csv" 
+        },
+        text: csv,
+    };
+}
 
 async function getVideoId(req) {
     // of course changed to work with productId but all the keywords are the same 
@@ -266,4 +316,5 @@ module.exports = {
     getRelated,
     getVideoCSV,
     getByAuthor,
+    getSearchCSV,
 };

@@ -31,6 +31,7 @@ var apiListVersion1 = {
     getVideoId:       require('../routes/public').getVideoId,
     getRelated:       require('../routes/public').getRelated,
     getVideoCSV:      require('../routes/public').getVideoCSV,
+    getSearchCSV:     require('../routes/public').getSearchCSV,
 
     getByAuthor:      require('../routes/public').getByAuthor,
     getPersonalCSV:   require('../routes/personal').getPersonalCSV,
