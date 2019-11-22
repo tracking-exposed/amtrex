@@ -34,9 +34,7 @@ if(backInTime != 10) {
 
 function parseAmazonURL(href) {
     const chunks = href.split('/');
-    console.log(JSON.stringify(chunks));
     const fragment = querystring.parse(_.last(chunks));
-    console.log(JSON.stringify(fragment));
 
     if(_.startsWith(chunks[3],'s?k')) {
         return {
@@ -118,7 +116,6 @@ async function newLoop() {
                 e.packet, e.incremental,
                 e.size, e.selector);
 
-            console.log(e.href);
             const urlInfo = parseAmazonURL(e.href);
 
             if(urlInfo.type == 'product') {
@@ -126,9 +123,12 @@ async function newLoop() {
 
                 if(metadata && _.size(metadata.sections) == 0)
                     debug("Missing related content in evidence %s", e.id);
+
             } else if(urlInfo.type == 'search') {
 
                 metadata = amzsearch.search(envelop);
+                if(metadata && _.size(metadata) == 0)
+                    debug("Missing search results in evidence %s", e.id);
             }
             else {
                 console.log("URL not supported!", e.href);
@@ -139,6 +139,8 @@ async function newLoop() {
                 debug("! failure in extraction");
                 return null;
             }
+
+            metadata = _.merge(metadata, urlInfo)
 
         } catch(error) {
             debug("Error in video processing: %s (%s)", error, e.selector);
@@ -151,7 +153,8 @@ async function newLoop() {
 
     let downloads = 0;
     for (const entry of _.compact(analysis)) {
-        downloads += await downloader.update(entry);
+        if(entry.type == 'product')
+            downloads += await downloader.update(entry);
     }
     debug("performed %d downloads", downloads);
 
