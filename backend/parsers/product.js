@@ -86,6 +86,9 @@ function product(envelop) {
             debug("more than one title? ");
             debugger;
         }
+        if(_.size(t) == 0) {
+            debug("Not a title found in %s", envelop.impression.href );
+        }
         productName = _.first(t).textContent;
         if(_.size(productName) == 0) {
             debug("Error: not found productName!");
