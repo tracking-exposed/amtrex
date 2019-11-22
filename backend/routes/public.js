@@ -5,6 +5,7 @@ const debug = require('debug')('routes:public');
 const params = require('../lib/params');
 const automo = require('../lib/automo');
 const CSV = require('../lib/CSV');
+const utils = require('../lib/utils');
 
 // This variables is used as cap in every readLimit below
 const PUBLIC_AMOUNT_ELEMS = 110;
@@ -45,6 +46,7 @@ async function getLast(req) {
         let freshContent = _.map(last, function(meta) {
             const d = moment.duration( moment(meta.savingTime) - moment() );
             meta.timeago = d.humanize() + ' ago';
+            meta.pseudo = utils.string2Food(meta.publicKey);
             meta.secondsago = d.asSeconds();
             meta.results = _.sortBy(meta.results, 'index');
             _.unset(meta, '_id');
@@ -56,7 +58,7 @@ async function getLast(req) {
             next: moment().add(cache.seconds, 'seconds')
         };
         debug("Returning %d last research, which become part of a %d minutes long cache",
-            _.size(freshContent), _.map(freshContent, 'title'), CACHE_SECONDS / 60);
+            _.size(freshContent), _.map(freshContent, 'title'), _.round(CACHE_SECONDS / 60, 1) );
         return formatReturn(cacheFormat);
     }
     else {
