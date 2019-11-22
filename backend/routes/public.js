@@ -9,7 +9,7 @@ const CSV = require('../lib/CSV');
 // This variables is used as cap in every readLimit below
 const PUBLIC_AMOUNT_ELEMS = 110;
 // This is in regards of the 'last' API cache, (which might be discontinued?)
-const CACHE_SECONDS = 600;
+const CACHE_SECONDS = 10;
 
 const cache = {
     seconds: CACHE_SECONDS,
@@ -36,41 +36,26 @@ function formatReturn(updated) {
 
 async function getLast(req) {
 
-    const fields = ['watcher', 'title', 'viewInfo', 'savingTime',
-                    'videoId', 'authorName', 'authorSource', 'likeInfo',
-                    'publicationString', 'relatedN' ];
-
-    const amount = 7;
-    const skip = _.random(10, 30);
-
     if(_.isNull(cache.content) || (cache.next && moment().isAfter(cache.next)) ) {
         // if not initialized ^^^^ or if the cache time is expired: do the query
         const last = await automo.getMetadataByFilter({
-            title: { $exists: true },
-            relatedN: { $gt: 10 },
-            videoId: { $exists: true }
-        }, { amount, skip });
+            type: 'search',
+        }, { amount: 40, skip: 0 });
 
         let freshContent = _.map(last, function(meta) {
-            const retval = _.pick(meta, fields);
-            retval.related = _.map(meta.related, function(e) {
-                let rv = _.merge(e, e.mined);
-                _.unset(rv, 'mined');
-                _.unset(rv, 'longlabel');
-                return rv;
-            });
-            const d = moment.duration( moment(retval.savingTime) - moment() );
-            retval.timeago = d.humanize() + ' ago';
-            retval.secondsago = d.asSeconds();
-            return retval;
+            const d = moment.duration( moment(meta.savingTime) - moment() );
+            meta.timeago = d.humanize() + ' ago';
+            meta.secondsago = d.asSeconds();
+            _.unset(meta, '_id');
+            return meta;
         });
         let cacheFormat = {
             content: _.reverse(_.orderBy(freshContent, 'secondsago')),
             computedAt: moment(),
             next: moment().add(cache.seconds, 'seconds')
         };
-        debug("Returning %d new random videos %j, which become part of a %d minutes long cache",
-            amount, _.map(freshContent, 'title'), CACHE_SECONDS / 60);
+        debug("Returning %d last research, which become part of a %d minutes long cache",
+            _.size(freshContent), _.map(freshContent, 'title'), CACHE_SECONDS / 60);
         return formatReturn(cacheFormat);
     }
     else {
