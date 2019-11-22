@@ -1,60 +1,6 @@
 #!/usr/bin/env node
 const _ = require('lodash');
 const debug = require('debug')('parser:search');
-const querystring = require('querystring');
-
-const stats = { skipped: 0, error: 0, suberror: 0, success: 0 };
-
-function guessTheAnchor(e) {
-    const combos = [
-        'parentNode.parentNode.children[0]', // sometime is this
-        'parentNode.parentNode.parentNode.children[0]',
-        'parentNode.parentNode.children[0].children[0]' // others is this
-    ];
-
-    const found = _.reduce(combos, function(memo, path, i) {
-        if(memo) return memo;
-        const tbt = _.get(e, path);
-        if(!tbt) return memo;
-        const href = tbt.getAttribute('href');
-        if(!href) return memo;
-
-        if(_.startsWith(href, '/product-review'))
-            return memo;
-
-        if(_.size(href) > 200) {
-            // debug("Success guessTheAnchor: %d", i);
-            return tbt;
-        }
-    }, null);
-
-    if(!found) { debug("Failure in guessTheAnchor"); debugger; }
-    return found;
-}
-
-function getOffset(bodystring, elementstr) {
-    return bodystring.indexOf(elementstr);
-}
-
-function findThumbnailURL(e) {
-    const combos = [
-        'parentNode',
-        'parentNode.parentNode',
-        'parentNode.parentNode.parentNode',
-    ];
-
-    const found = _.reduce(combos, function(memo, path, i) {
-        if(memo) return memo;
-        const tbt = _.get(e, path);
-        if(!tbt) return memo;
-        const possibleURL = tbt.outerHTML.replace(/.*src="/, '').replace(/".*/, '');
-        if(possibleURL.match(/\.jpg$/))
-            return possibleURL;
-    }, null);
-
-    if(!found) { debug("Failure in findThumbnailURL"); debugger; }
-    return found;
-};
 
 function search(envelop) {
 
@@ -105,6 +51,7 @@ function search(envelop) {
                 let linked = node.parentNode.querySelectorAll('[href]');
                 if(_.size(linked)) {
                     mmm.href = linked[0].getAttribute('href');
+                    mmm.chunks = mmm.href.split('/');
                 }
                 mmm.name = node.textContent.trim();
             } else {

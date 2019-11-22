@@ -30,6 +30,12 @@ async function getSummaryByPublicKey(publicKey, options) {
         // this        * 5 is because of the duplication stripping below
 
     const uniquified = _.reduce(metadata, function(memo, m) {
+
+        if(m.type == 'search') {
+            memo.acc.push(m);
+            return memo;
+        }
+
         if(!m.productId)
             return memo;
 
