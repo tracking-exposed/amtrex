@@ -32,21 +32,16 @@ async function getSummaryByPublicKey(publicKey, options) {
 
     const uniquified = _.reduce(metadata, function(memo, m) {
 
-        if(m.type == 'search') {
-            memo.acc.push(m);
-            return memo;
-        }
-
-        if(!m.productId)
+        if(!m.href)
             return memo;
 
-        if(memo.lastProductId == m.productId)
+        if(memo.lastHref == m.href)
             return memo;
 
-        memo.lastProductId = m.productId;
+        memo.lastHref = m.href;
         memo.acc.push(m);
         return memo;
-    }, { acc: [], lastProductId: null } );
+    }, { acc: [], lastHref: null } );
 
     debug("-> %j", _.countBy(uniquified.acc, 'type'));
     const unique = _.take(_.sortBy(uniquified.acc, { savingTime: -1}), options.amount);
