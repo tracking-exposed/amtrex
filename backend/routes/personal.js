@@ -56,7 +56,7 @@ async function getPersonalCSV(req) {
         _.size(csv), _.size(data), CSV_MAX_SIZE);
 
     if(!_.size(csv))
-        return { text: "Error, Zorry: 🤷" };
+        return { text: "Error, Content not available 🤷" };
 
     const filename = 'your-amtrex-' + moment().format("YY-MM-DD") + ".csv"
     return {

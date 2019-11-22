@@ -24,9 +24,10 @@ async function getSummaryByPublicKey(publicKey, options) {
     if(!supporter || !supporter.publicKey)
         throw new Error("Authentication failure");
 
+    const HACKFACTOR = 5;
     const metadata = await mongo3.readLimit(mongoc,
         nconf.get('schema').metadata, { publicKey: supporter.publicKey }, { savingTime: -1 },
-        options.amount * 5, options.skip);
+        options.amount * HACKFACTOR, options.skip);
         // this        * 5 is because of the duplication stripping below
 
     const uniquified = _.reduce(metadata, function(memo, m) {
@@ -47,14 +48,15 @@ async function getSummaryByPublicKey(publicKey, options) {
         return memo;
     }, { acc: [], lastProductId: null } );
 
+    debug("-> %j", _.countBy(uniquified.acc, 'type'));
     const unique = _.take(_.sortBy(uniquified.acc, { savingTime: -1}), options.amount);
     debug("This should reviewed and made pointless by a more accurate collection - accu %d - returned %d - final %d limit %d",
         _.size(uniquified.acc), _.size(metadata), _.size(unique), options.amount);
 
-    const total = await mongo3.count(mongoc,
+    const total = await _.round(mongo3.count(mongoc,
         nconf.get('schema').metadata, { publicKey: supporter.publicKey, productName: {
             $exists: true
-        } });
+        } }) / HACKFACTOR, 0);
 
     await mongoc.close();
 
@@ -72,7 +74,7 @@ async function getMetadataByPublicKey(publicKey, options) {
     /* special condition for development purposes */
     if(publicKey == SPECIALKEY) {
         const metadata = await mongo3.readLimit(mongoc,
-            nconf.get('schema').metadata, {}, { savingTime: -1 },
+            nconf.get('schema').metadata, { type: 'product'}, { savingTime: -1 },
             options.amount, options.skip);
 
         await mongoc.close();
@@ -85,7 +87,7 @@ async function getMetadataByPublicKey(publicKey, options) {
         throw new Error("publicKey do not match any user");
 
     const metadata = await mongo3.readLimit(mongoc,
-        nconf.get('schema').metadata, { publicKey: supporter.publicKey }, { savingTime: -1 },
+        nconf.get('schema').metadata, { type: 'product', publicKey: supporter.publicKey }, { savingTime: -1 },
         options.amount, options.skip);
 
     await mongoc.close();
