@@ -309,6 +309,93 @@ async function getByAuthor(req) {
     }};
 };
 
+async function getView(req) {
+
+    const blocks = req.params.ids.split('-');
+    const title = blocks[1];
+    const strids = blocks[0];
+    const ids = strids.split(',');
+    let results = [];
+
+    debug("getView - %d - %s %s",
+        _.size(ids), title, strids);
+
+    for (id of ids ) {
+        const r = await automo
+            .getMetadataByFilter({id,
+                "results.first": {$exists: true}
+            }, { amount: 1, skip: 0});
+
+        results.push(_.first(r));
+        debug("current amount of results %d", _.size(results));
+    }
+
+    let maxIndex = 0;
+    let averages = [];
+    const xx = _.map(results, function(e) {
+
+        debug(_.map(e.results, 'first'));
+        const sequence = _.map(_.flatten(_.map(e.results, function(p) {
+            if(p.first) {
+                let x = p.first
+                    .replace(/\ /, '')
+                    .replace('.', '')
+                    .replace(',', '.');
+                return x;
+            }
+            else {
+                debug("Error with %s", p.first);
+                return 0;
+            }
+        })), parseFloat);
+        debug(sequence);
+        if(_.size(sequence) > 0) {
+            let avg = _.round(_.sum(sequence) / _.size(sequence), 1);
+            averages.push(avg);
+        } else  {
+            debug("Odd? no price sequence to compute an average?");
+            averages.push('N/A');
+        }
+
+        return _.compact(_.map(e.results, function(x) {
+
+            if(maxIndex < x.order)
+                maxIndex = x.order;
+
+            if( _.size(x.chunks[3]) != 10 )
+                return null;
+           
+            x.savingTime = e.savingTime;
+            x.productId = x.chunks[3];
+            return x;
+        }));
+    })
+
+    const byId = _.map(_.uniq(_.map(_.flatten(xx), 'productId' )), function(id) {
+        let matchlist = [];
+        _.each(xx, function(answer, userCount) {
+            let match = _.find(answer, { productId: id});
+            if(match) {
+                _.unset(match, 'chunks');
+                _.unset(match, 'href');
+                _.unset(match, 'index');
+                _.unset(match, 'rawndx');
+            }
+            matchlist.push(match);
+        })
+        return matchlist;
+    });
+
+    return { json: {
+        title: title,
+        map: xx,
+        byId,
+        maxIndex,
+        averages,
+        users: _.size(xx)
+    }};
+
+}
 
 module.exports = {
     getLast,
@@ -317,4 +404,5 @@ module.exports = {
     getVideoCSV,
     getByAuthor,
     getSearchCSV,
+    getView,
 };

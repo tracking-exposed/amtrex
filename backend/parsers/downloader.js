@@ -18,6 +18,7 @@ async function update(metadata) {
         const id = utils.hash({ thumbnail: r.thumbnail });
         _.set(r.thumbnailId, id);
         return {
+            metadataId: metadata.id,
             id,
             thumbnail: r.thumbnail
         }
@@ -40,8 +41,7 @@ async function update(metadata) {
 
     debug("Unique ID to fetch are %d", _.size(downloadable));
     for (const d of downloadable) {
-        debug("Connecting to fetch: %s", d.thumbnail);
-
+        debug("BIG BUG! the content is a promise -- Connecting to fetch: %s", d.thumbnail);
         await fetch(d.thumbnail)
             .then(function(response) {
                 return [ response.buffer(), response.headers.raw() ];
@@ -49,8 +49,10 @@ async function update(metadata) {
             .then(function(response) {
                 const destpath = nconf.get('pictures') + '/' + d.id + '.jpg';
                 fs.writeFileSync(destpath, response[0]);
+                // ^^^^^^^^^^^^^^^^^^^^^^^^ here is the bug 
                 return mongo3.writeOne(mongoc, nconf.get('schema').thumbnails, {
                     id: d.id,
+                    metadata: d.metadataId,
                     url: d.thumbnail,
                     content: destpath,
                     headers: response[1],

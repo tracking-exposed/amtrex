@@ -326,7 +326,7 @@ async function createMetadataEntry(mongoc, html, newsection) {
     exists.publicKey = html.publicKey;
     exists.savingTime = html.savingTime;
     exists.clientTime = html.clientTime;
-    exists.version = 2;
+    exists.version = newsection.version ? newsection.version : 2;
     exists = _.extend(exists, newsection);    
     await mongo3.writeOne(mongoc, nconf.get('schema').metadata, exists);
     return exists;

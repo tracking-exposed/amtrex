@@ -95,7 +95,7 @@ async function processEvents2(req) {
             publicKey: headers.publickey,
             randomUUID: body.randomUUID,
         });
-        const isVideo = body.href.match(/v=/) ? true : false;
+        const isProduct = body.href.match(/\/dp\//) ? true : false;
         const html = {
             id,
             metadataId,
@@ -105,7 +105,7 @@ async function processEvents2(req) {
             savingTime: new Date(),
             html: body.element,
             size: _.size(body.element),
-            isVideo,
+            isProduct,
             selector: body.selector,
             incremental: body.incremental,
             packet: i,

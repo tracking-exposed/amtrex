@@ -150,7 +150,6 @@ async function newLoop() {
         return [ envelop.impression, metadata ];
     });
 
-
     let downloads = 0;
     for (const entry of _.compact(analysis)) {
         if(entry.type == 'product')

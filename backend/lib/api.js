@@ -26,6 +26,8 @@ var apiListVersion1 = {
     handshake:        require('./handshake').handshake,
      */
 
+    getView:          require('../routes/public').getView,
+
     /* the three currently used/tested for the public */
     getLast:          require('../routes/public').getLast,
     getVideoId:       require('../routes/public').getVideoId,

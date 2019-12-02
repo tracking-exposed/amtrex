@@ -108,6 +108,9 @@ app.get('/api/v1/searchcsv', function(req, res) {
 app.get('/api/v1/author/:query/:amount?', function(req, res) {
     return dispatchPromise('getByAuthor', req, res);
 });
+app.get('/api/v1/views/:ids', function(req, res) {
+    return dispatchPromise('getView', req, res);
+})
 
 /* This is import and validate the key */
 app.post('/api/v:version/validate', function(req, res) {
