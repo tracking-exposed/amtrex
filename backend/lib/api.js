@@ -46,9 +46,6 @@ var apiListVersion1 = {
     removeEvidence:    require('../routes/personal').removeEvidence,
     getEvidences:      require('../routes/personal').getEvidences,
 
-    /* rsync for developer, overthrown by 'mirror' */
-    rsync:             require('../routes/rsync').rsync,
-
     /* researcher functionalities */
     researcher:        require('../routes/researcher').researcher,
 
@@ -62,6 +59,9 @@ var apiListVersion1 = {
 
     /* creation of a new tagGroup */
     createTag:         require('../routes/profile').createTag,
+    
+    /* realtime monitor */
+    getMonitor:        require('../routes/monitor').getMonitor,
 };
 
 module.exports = {

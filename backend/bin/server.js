@@ -148,11 +148,6 @@ app.get('/api/v1/html/:htmlId', function(req, res) {
     return dispatchPromise('unitById', req, res);
 });
 
-/* rsync your data back */
-app.get('/api/v1/rsync/:daysago?', function(req, res) {
-    return dispatchPromise('rsync', req, res);
-});
-
 /* research subscription and I/O */
 app.get('/api/v1/research/:publicKey', function(req, res) {
     return dispatchPromise('rsync', req, res);
@@ -184,6 +179,11 @@ app.post('/api/v2/profile/:publicKey', (req, res) => {
     return dispatchPromise("updateProfile", req, res);
 });
 
+
+/* monitor for admin */
+app.get('/api/v2/monitor/:minutes?', function(req, res) {
+    return dispatchPromise('getMonitor', req, res);
+});
 
 /* the remaining code */
 security.checkKeyIsSet();
