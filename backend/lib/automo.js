@@ -286,6 +286,20 @@ async function getLastHTMLs(filter, skip) {
     }
 }
 
+async function markHTMLsUnprocessable(htmls) {
+    const mongoc = await mongo3.clientConnect({concurrency: 1});
+    const ids = _.map(htmls, 'id');
+    const r = await mongo3.updateMany(mongoc, nconf.get('schema').htmls,
+        { id: { $in: ids }}, { processed: false });
+
+    if( r.result.n != _.size(ids) ||
+        r.result.nModified != _.size(ids) ||
+        r.result.ok != 1) {
+        debug("Odd condition in multiple update! %j", r.result);
+    }
+    await mongoc.close();
+}
+
 async function updateMetadata(html, newsection) {
 
     async function markHTMLandClose(mongoc, html, retval) {
@@ -294,80 +308,140 @@ async function updateMetadata(html, newsection) {
         return retval;
     }
 
-    // we should look at the same metadataId in the 
-    // metadata collection, and update new information
-    // if missing 
+    /* we should look at the same metadataId in the metadata collection,
+       and update new information if missing */
     const mongoc = await mongo3.clientConnect({concurrency: 1});
-    let exists = null;
 
     if(!html.metadataId) {
         debug("metadataId is not an ID!");
-        return await markHTMLandClose(mongoc, html, null);
+        return await markHTMLandClose(mongoc, html, { what: 'not an ID'});
     }
 
-    try {
-        exists = await createMetadataEntry(mongoc, html, newsection);
+    const exists = await mongo3.readOne(mongoc, nconf.get('schema').metadata, { id: html.metadataId });
+
+    if(!exists) {
+        await createMetadataEntry(mongoc, html, newsection);
         debug("Created metadata %s from %s with %s", html.metadataId, html.href, html.selector);
-    } catch(e) {
-        /* the read+write in a single thread seems is not enough to guarantee */
-        if(e.code == 11000) {
-            exists = await updateMetadataEntry(mongoc, html, newsection);
-        } else {
-            debug("Unexpected error: %s (%d)", e.message, e.code);
-        }
+        return await markHTMLandClose(mongoc, html, { what: 'created'});
     }
-    return await markHTMLandClose(mongoc, html, exists);
-}
 
-async function createMetadataEntry(mongoc, html, newsection) {
-    /* this is not exported, it is used only by updateMetadata */
-    exists = {};
-    exists.id = html.metadataId;
-    exists.publicKey = html.publicKey;
-    exists.savingTime = html.savingTime;
-    exists.clientTime = html.clientTime;
-    exists.version = newsection.version ? newsection.version : 2;
-    exists = _.extend(exists, newsection);    
-    await mongo3.writeOne(mongoc, nconf.get('schema').metadata, exists);
-    return exists;
-}
-
-async function updateMetadataEntry(mongoc, html, newsection) {
-    /* this is not exported, it is used only by updateMetadata */
     let updates = 0;
-    let exists = await mongo3.readOne(mongoc, nconf.get('schema').metadata, { id: html.metadataId });
-
+    let forceu = false;
+    /* we don't care of these updates */
+    const careless = [ 'clientTime', 'savingTime', 'size' ];
     /* this is meant to add only fields with values, and to notify duplicated
      * conflictual metadata mined, or extend labels as list */
     const up = _.reduce(newsection, function(memo, value, key) {
 
-        if(!value)
+        if(!value || !_.size(value))
             return memo;
 
         let current = _.get(memo, key);
-        if(typeof current == typeof 'thastrng' && html.selector != 'ytd-app') {
-            if(value != current) {
-                _.set(memo, key, [ value, current ]);
-                debugLite("[s] extended string: %s -> %j", key, memo);
-            }
-        }
-        else if(typeof current == typeof [] && _.size() && html.selector != 'ytd-app') {
-            if(current.indexOf(value) == -1) {
-                _.set(memo, key, _.concat(current, value) );
-                debugLite("[o] extended object %s", key);
-            }
-        } else {
+        if(!current) {
             _.set(memo, key, value);
-            updates++;
+            updates++; 
+        } else if(_.indexOf(careless, key) == -1) {
+            /* we don't care of these updates */
+        } else if(!_.isEqual(JSON.stringify(current), JSON.stringify(value))) {
+            const record = {
+                clientTime: html.clientTime,
+                // selector: html.selector,
+                value,
+                key,
+            };
+
+            debug("record update in %s c[%s --- %s]v", key, current, value)
+
+            if(_.isUndefined(memo.variation))
+                memo.variation = [ record ];
+            else
+                memo.variation.push(record);
+
+            forceu = true;
+        } else {
+            /* no update */
         }
-
         return memo;
-    }, exists);    
+    }, exists);
 
-    debug("Updating metadata %s with %s (total of %d updates)",
-        html.metadataId, html.selector, updates);
-    let r = await mongo3.updateOne(mongoc, nconf.get('schema').metadata, { id: html.metadataId }, up );
-    return r;
+    debug("Evalutatig if update metadata %s (%s) %d updates, force %s",
+        html.metadataId, html.selector, updates, forceu);
+
+    if(forceu || updates ) {
+        // debug("Update from incremental %d to %d", exists.incremental, up.incremental);
+        // not in youtube!
+        let r = await mongo3.updateOne(mongoc, nconf.get('schema').metadata, { id: html.metadataId }, up );
+        return await markHTMLandClose(mongoc, html, { what: 'updated'});
+    }
+    return await markHTMLandClose(mongoc, html, { what: 'duplicated'});
+}
+
+async function createMetadataEntry(mongoc, html, newsection) {
+    exists = {};
+    exists.publicKey = html.publicKey;
+    exists.savingTime = html.savingTime;
+    exists.version = 3;
+    exists = _.extend(exists, newsection);
+    exists.id = html.metadataId;
+    await mongo3.writeOne(mongoc, nconf.get('schema').metadata, exists);
+    return exists;
+}
+
+async function getMixedDataSince(schema, since, maxAmount) {
+   
+    const mongoc = await mongo3.clientConnect({concurrency: 1});
+    const retContent = [];
+
+    for (let cinfo of schema) {
+        let columnName = _.first(cinfo);
+        let fields = _.nth(cinfo, 1);
+        let timevar = _.last(cinfo);
+        let filter = _.set({}, timevar, { $gt: since});
+
+        /* it prefer the last samples, that's wgy the sort -1 */
+        const r = await mongo3.readLimit(mongoc,
+            nconf.get('schema')[columnName], filter, _.set({}, timevar, -1),
+            maxAmount, 0);
+
+        /* if an overflow is spotted, with message is appended */
+        if(_.size(r) == maxAmount)
+            retContent.push({
+                template: 'info',
+                message: 'Whoa, too many! capped limit at ' + maxAmount,
+                subject: columnName,
+                id: "info-" + _.random(0, 0xffff),
+                timevar: new Date(
+                    moment(_.last(r)[timevar]).subtract(1, 'ms').toISOString()
+                ),
+                /* one second is added to be sure the alarm message appears after the
+                 * last, and not in between the HTMLs/metadatas */
+            });
+
+        /* every object has a variable named 'timevar', and the $timevar we
+         * used to pick the most recent 200 is renamed as 'timevar'. This allow
+         * us to sort properly the sequence of events happen server side */
+        _.each(r, function(o) {
+            let good = _.pick(o, fields)
+            good.template = columnName;
+            good.relative = _.round(
+                moment.duration( moment() - moment(o[timevar]) ).asSeconds()
+            , 1);
+
+            good['timevar'] = new Date(o[timevar]);
+            good.printable = moment(good['timevar']).format('HH:mm:ss');
+            _.unset(good, timevar);
+
+            /* supporters, or who know in the future, might have not an 'id'.
+               it is mandatory for client side logic, so it is attributed random */
+            if(_.isUndefined(good.id))
+                _.set(good, 'id', "RANDOM-" + _.random(0, 0xffff));
+
+            retContent.push(good);
+        });
+    }
+
+    mongoc.close();
+    return retContent;
 }
 
 
@@ -396,4 +470,8 @@ module.exports = {
     /* used in parserv2 */
     getLastHTMLs,
     updateMetadata,
+    markHTMLsUnprocessable,
+
+    /* used in getMonitor */
+    getMixedDataSince,
 };
