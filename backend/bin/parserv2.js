@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 const _ = require('lodash');
 const moment = require('moment');
-const debug = require('debug')('bin:parse2');
+const debug = require('debug')('amtrex:parserv');
 const nconf = require('nconf');
 const JSDOM = require('jsdom').JSDOM;
 const querystring = require('querystring');
 
+const automo = require('../lib/automo')
 const amzproduct = require('../parsers/product')
 const amzsearch = require('../parsers/search')
-const automo = require('../lib/automo')
 const downloader = require('../parsers/downloader');
 
 nconf.argv().env().file({ file: 'config/settings.json' });
@@ -20,6 +20,8 @@ echoes.setDefaultEcho("elasticsearch"); */
 const FREQUENCY = _.parseInt(nconf.get('frequency')) ? _.parseInt(nconf.get('frequency')) : 10;
 const backInTime = _.parseInt(nconf.get('minutesago')) ? _.parseInt(nconf.get('minutesago')) : 10;
 const id = nconf.get('id');
+const downloadEnabled = !!nconf.get('download');
+
 let singleUse = !!nconf.get('single');
 let nodatacounter = 0;
 let lastExecution = moment().subtract(backInTime, 'minutes').toISOString();
@@ -120,63 +122,67 @@ async function newLoop() {
 
             if(urlInfo.type == 'product') {
                 metadata = amzproduct.product(envelop);
-
                 if(metadata && _.size(metadata.sections) == 0)
-                    debug("Missing related content in evidence %s", e.id);
+                    throw new Error("Missing related products");
 
             } else if(urlInfo.type == 'search') {
 
                 metadata = amzsearch.search(envelop);
                 if(metadata && _.size(metadata) == 0)
-                    debug("Missing search results in evidence %s", e.id);
+                    throw new Error("Missing search results");
             }
             else {
-                console.log("URL not supported!", e.href);
+                debug("URL not supported!", e.href);
                 return null;
             }
 
             if(!metadata) {
-                debug("! failure in extraction");
+                debug("Missing metadata? failure in extraction");
                 return null;
             }
 
             metadata = _.merge(metadata, urlInfo)
 
         } catch(error) {
-            debug("Error in video processing: %s (%s)", error, e.selector);
+            debug("[%s] Error in processing: %s", e.id, error.message);
             return null;
         }
 
         return [ envelop.impression, metadata ];
     });
 
-    let downloads = 0;
-    for (const entry of _.compact(analysis)) {
-        if(entry.type == 'product')
-            downloads += await downloader.update(entry);
-    }
-    debug("performed %d downloads", downloads);
+    if(downloadEnabled) {
+        let downloads = 0;
+        for (const entry of _.compact(analysis)) {
+            if(entry.type == 'product')
+                downloads += await downloader.update(entry);
+        }
+        debug("performed %d downloads", downloads);
+    } else debug("download is _disabled_");
 
+    const updates = [];
     for (const entry of _.compact(analysis)) {
-        await automo.updateMetadata(entry[0], entry[1]);
+        let r = await automo.updateMetadata(entry[0], entry[1]);
+        updates.push(r);
     }
+    debug("%d html.content, %d analysis, compacted %d, effects: %j",
+        _.size(htmls.content), _.size(analysis),
+        _.size(_.compact(analysis)), _.countBy(updates, 'what'));
 
     /* reset no-data-counter if data has been sucessfully processed */
     if(_.size(_.compact(analysis)))
         nodatacounter = 0;
 
-    /* also the HTML cutted off the pipeline, the many skipped 
+    /* also the HTML cutted off the pipeline, the many skipped
      * by _.compact all the null in the lists, should be marked as processed */
     const remaining = _.reduce(_.compact(analysis), function(memo, blob) {
         return _.reject(memo, { id: blob[0].id });
     }, htmls.content);
 
-    debug("Usable HTMLs %d/%d - marking as processed the useless %d HTMLs", 
+    debug("Usable HTMLs %d/%d - marking as processed the useless %d HTMLs",
         _.size(_.compact(analysis)), _.size(htmls.content), _.size(remaining));
 
-    for (const html in remaining) {
-        await automo.updateMetadata(html, null);
-    }
+    await automo.markHTMLsUnprocessable(remaining);
 }
 
 function sleep(ms) {
