@@ -137,7 +137,7 @@ async function newLoop() {
             }
 
             if(!metadata) {
-                debug("Missing metadata? failure in extraction");
+                debug("%s html failure in extracting metadata", e.id);
                 return null;
             }
 
