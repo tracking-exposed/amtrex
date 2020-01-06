@@ -34,11 +34,15 @@ return request
             .postAsync(destUrl, { json: copiedReq.body, headers: copiedReq.headers })
             .then(function(result) {
                 if(result.body && result.body.supporter)
-                    debug("OK %s: %s",
-                        copiedReq.headers['x-amtrex-version'], result.body.supporter.p);
+                    debug("OK %s: %s %d - %j",
+                        copiedReq.headers['x-yttrex-version'],
+                        result.body.supporter.p,
+                        _.size(copiedReq.body),
+                        _.map(copiedReq.body, 'href')
+                    );
                 else
                     debug("?? %s - %j",
-                        copiedReq.headers['x-amtrex-version'], result.body);
+                        copiedReq.headers['x-yttrex-version'], result.body);
             })
     }, { concurrency: 1})
     .catch(function(error) {
