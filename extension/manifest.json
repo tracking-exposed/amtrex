@@ -25,8 +25,10 @@
     "tabs",
     "http://localhost:11000/",
     "https://*.amazon.com/",
+    "https://*.amazon.fr/",
+    "https://*.amazon.de/",
     "https://*.amazon.it/",
-    "https://*.tracking.exposed/"
+    "https://amazon.tracking.exposed/"
   ],
 
   "background": {
@@ -39,8 +41,10 @@
       "matches": [
           "http://localhost/*",
           "http://127.0.0.1/*",
-          "https://*.tracking.exposed/*",
+          "https://amazon.tracking.exposed/*",
           "https://*.amazon.com/*",
+          "https://*.amazon.fr/*",
+          "https://*.amazon.de/*",
           "https://*.amazon.it/*"
       ],
       "js": ["./app.js"]
