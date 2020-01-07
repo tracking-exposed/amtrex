@@ -7,10 +7,10 @@ const params = require('../lib/params');
 
 async function getMonitor(req) {
 
-    const MINUTES = 5;
+    const MINUTES = 5 * 99999;
     const minutesAgo = params.getInt(req, 'minutes', MINUTES);
     const timeBehind = moment().subtract(minutesAgo, 'minutes').toISOString();
-    const amount = 30;
+    const amount = 20;
     debug("getMonitor request: contents since %d minutes ago: %s (max %d)",
         minutesAgo, timeBehind, amount);
 
@@ -22,8 +22,9 @@ async function getMonitor(req) {
         [ 'htmls',
             [ 'id', 'metadataId', 'savingTime', 'processed', 'selector', 'href', 'size', 'publicKey'],
             'savingTime' ],
+            /* it might have type='search' or ='product' */
         [ 'metadata',
-            [ 'id', 'title', 'videoId', 'watcher', 'authorName', 'authorSource', 'viewInfo', 'savingTime'],
+            [ 'id', 'publicKey', 'savingTime', 'results', 'query', 'type', 'productName', 'sections' , 'productId'],
             'savingTime' ]
     ], new Date(timeBehind), amount );
 
@@ -31,7 +32,18 @@ async function getMonitor(req) {
     // the key template='info' is added if any special condition is triggered
     // the key 'template' and 'relative' are always added
 
-    const ordered = _.orderBy(content, [ 'timevar' ], [ 'desc' ]);
+    const fixed = _.map(content, function(e) {
+        /* this allow us, client side, to keep a separated template instead of
+         * a condition check in metadata template */
+        if(e.template == 'metadata') {
+            e.template = e.type;
+            _.unset(e, 'type');
+            return e;
+        }
+        return e;
+    })
+
+    const ordered = _.orderBy(fixed, [ 'timevar' ], [ 'desc' ]);
     return {
         json: {
             content: ordered,
