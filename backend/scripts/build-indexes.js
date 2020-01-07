@@ -3,6 +3,7 @@ ret = db.metadata.createIndex({productId: 1}); checkret('metadata productId', re
 ret = db.metadata.createIndex({"related.name": 1}); checkret('metadata related.name', ret);
 ret = db.metadata.createIndex({productName: 1}); checkret('metadata authorName', ret);
 ret = db.metadata.createIndex({savingTime: -1}); checkret('metadata savingTime', ret);
+ret = db.metadata.createIndex({type: 1}); checkret('metadata type', ret);
 
 ret = db.supporters.createIndex({ publicKey: 1 }, { unique: true }); checkret('supporters publicKey:', ret);
 ret = db.supporters.createIndex({ creationTime: 1 }); checkret('supporters creationTime:', ret);
