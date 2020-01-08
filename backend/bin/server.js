@@ -93,7 +93,7 @@ app.use(bodyParser.urlencoded({limit: '8mb', extended: true}));
 app.get('/api/v1/last', function(req, res) {
     return dispatchPromise('getLast', req, res);
 });
-app.get('/api/v1/videoId/:query', function(req, res) {
+app.get('/api/v1/product/:query', function(req, res) {
     return dispatchPromise('getVideoId', req, res);
 });
 app.get('/api/v1/related/:query', function(req, res) {
