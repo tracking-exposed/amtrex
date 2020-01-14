@@ -185,41 +185,57 @@ async function deleteEntry(publicKey, id) {
     return { video, metadata };
 };
 
-async function getRelatedByVideoId(videoId, options) {
+async function getResultsByQuery(query) {
     const mongoc = await mongo3.clientConnect({concurrency: 1});
+    const finalq = _.extend(query, { type : 'search'})
     const related = await mongo3
-        .aggregate(mongoc, nconf.get('schema').metadata, [
-            { $match: { videoId: videoId } },
-            { $sort: { savingTime: -1 }},
-            { $skip: options.skip },
-            { $limit : options.amount },
-            // { $lookup: { from: 'videos', localField: 'id', foreignField: 'id', as: 'videos' }},
-            // TODO verify how this work between v1 and v2 transition
-            { $unwind: '$related' },
-            { $sort: { savingTime: -1 }}
-        ]);
+        .readLimit(mongoc, nconf.get('schema').metadata, finalq, {
+            savingTime: -1 }, 2000, 0);
+
     await mongoc.close();
-    debug("Aggregate of getRelated: %d entries", _.size(related));
-    return _.map(related, function(r) {
-        return {
-            id: r.id.substr(0, 20),
-            videoId: r.related.videoId,
-            title: r.related.title,
-            verified: r.related.verified,
-            source: r.related.source,
-            vizstr: r.related.vizstr,
-            foryou: r.related.foryou,
-            suggestionOrder: r.related.index,
-            displayLength: r.related.displayTime,
-            watched: r.title,
-            since: r.publicationString,
-            credited: r.authorName,
-            channel: r.authorSource,
-            savingTime: r.savingTime,
-            watcher: r.watcher,
-            watchedId: r.videoId,
-        };
-    });
+
+    debug("Queries are %d", _.size(related));
+
+   const produced = _.reduce(related, function(memo, e) {
+
+        const pseudo = utils.string2Food(e.publicKey);
+
+        const sequence = _.flatten(_.map(e.results, 'price'));
+        debug("%j", sequence)
+        let avg = 0;
+        if(_.size(sequence) > 0) {
+            avg = _.round(_.sum(sequence) / _.size(sequence), 1);
+        }
+
+        const lines = _.map(e.results, function(r) {
+            let productId = _.size(r.chunks) ? r.chunks[3] : null;
+
+            if(!productId || _.size(productId) != 10) {
+                debug("productId %d %s seems wrong: %s", r.order, e.id, productId);
+                return null;
+            }
+
+            return {
+                pseudo,
+                query: e.query,
+                savingTime: e.savingTime,
+                timeago: moment.duration(moment() - moment(e.savingTime)).humanize(true),
+                order: r.order,
+                product: r.name,
+                productId,
+                searchId: e.id,
+                thumbnail: r.thumbnail,
+                rawprice: r.price ? r.price.join('-') : 'N/A',
+                firstprice: r.price ? _.first(r.price) : 'N/A',
+                productLink: r.href,
+    //            average: avg
+            }
+        });
+
+        memo = _.concat(memo, _.compact(lines));
+        return memo;
+    }, []);
+    return produced;
 }
 
 async function write(where, what) {
@@ -461,7 +477,7 @@ module.exports = {
     getFirstVideos,
 
     /* used by public/videoCSV */
-    getRelatedByVideoId,
+    getResultsByQuery,
 
     /* used in events.js processInput */
     tofu,

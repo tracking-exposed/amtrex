@@ -32,7 +32,7 @@ var apiListVersion1 = {
     getLast:          require('../routes/public').getLast,
     getVideoId:       require('../routes/public').getVideoId,
     getRelated:       require('../routes/public').getRelated,
-    getVideoCSV:      require('../routes/public').getVideoCSV,
+    getFlexibleCSV:   require('../routes/public').getFlexibleCSV,
     getSearchCSV:     require('../routes/public').getSearchCSV,
 
     getByAuthor:      require('../routes/public').getByAuthor,
@@ -62,6 +62,10 @@ var apiListVersion1 = {
     
     /* realtime monitor */
     getMonitor:        require('../routes/monitor').getMonitor,
+
+    /* experiment API */
+    registerExperiment:require('../routes/experiments').registerExperiment,
+    commitAction:      require('../routes/experiments').commitAction,
 };
 
 module.exports = {

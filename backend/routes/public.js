@@ -173,14 +173,18 @@ async function getRelated(req) {
     return { json: evidences };
 };
 
-async function getVideoCSV(req) {
-    // /api/v1/videoCSV/:query/:amount
+async function getFlexibleCSV(req) {
+    // /api/v2/flexCSV/:query/
     const MAXENTRY = 2800;
     const { amount, skip } = params.optionParsing(req.params.paging, MAXENTRY);
-    debug("getVideoCSV %s, amount %d skip %d (default %d)", req.params.query, amount, skip, MAXENTRY);
-    const byrelated = await automo.getRelatedByVideoId(req.params.query, { amount, skip} );
+
+    debug("-----  getVideoCSV %s, amount %d skip %d (default %d)", req.params.query, amount, skip, MAXENTRY);
+    const byrelated = await automo.getResultsByQuery({ query: 'soup maker' }); // req.params.query, { amount, skip} );
+
+    debug("%d", _.size(byrelated));
+
     const csv = CSV.produceCSVv1(byrelated);
-    const filename = 'video-' + req.params.query + "-" + moment().format("YY-MM-DD") + ".csv"
+    const filename = 'searchBy-' + req.params.query + "-" + moment().format("YYYY-MM-DD") + ".csv"
     debug("VideoCSV: produced %d bytes, returning %s", _.size(csv), filename);
 
     if(!_.size(csv))
@@ -310,6 +314,7 @@ async function getByAuthor(req) {
 };
 
 async function getView(req) {
+    // this is used-usable to build 
 
     const blocks = req.params.ids.split('-');
     const title = blocks[1];
@@ -401,7 +406,7 @@ module.exports = {
     getLast,
     getVideoId,
     getRelated,
-    getVideoCSV,
+    getFlexibleCSV,
     getByAuthor,
     getSearchCSV,
     getView,

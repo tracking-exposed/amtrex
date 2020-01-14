@@ -59,6 +59,7 @@ function dispatchPromise(name, req, res) {
                   debug("Setting header %s: %s", key, value);
                   res.setHeader(key, value);
               });
+
           if(httpresult.json) {
               debug("%s API success, returning JSON (%d bytes)",
                   name, _.size(JSON.stringify(httpresult.json)) );
@@ -99,8 +100,8 @@ app.get('/api/v1/product/:query', function(req, res) {
 app.get('/api/v1/related/:query', function(req, res) {
     return dispatchPromise('getRelated', req, res);
 });
-app.get('/api/v1/videoCSV/:query/:amount?', function(req, res) {
-    return dispatchPromise('getVideoCSV', req, res);
+app.get('/api/v2/flexibleCSV/:query', function(req, res) {
+    return dispatchPromise('getFlexibleCSV', req, res);
 });
 app.get('/api/v1/searchcsv', function(req, res) {
     return dispatchPromise('getSearchCSV', req, res);
@@ -179,6 +180,13 @@ app.post('/api/v2/profile/:publicKey', (req, res) => {
     return dispatchPromise("updateProfile", req, res);
 });
 
+/* experiments API */
+app.post('/api/v2/experiments/register', (req, res) => {
+    return dispatchPromise("registerExperiment", req, res);
+});
+app.post('/api/v2/experiments/:publicKey/:expname', (req, res) => {
+    return dispatchPromise("commitAction", req, res);
+});
 
 /* monitor for admin */
 app.get('/api/v2/monitor/:minutes?', function(req, res) {
