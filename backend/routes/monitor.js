@@ -7,10 +7,10 @@ const params = require('../lib/params');
 
 async function getMonitor(req) {
 
-    const MINUTES = 5 * 99999;
+    const MINUTES = 5;
     const minutesAgo = params.getInt(req, 'minutes', MINUTES);
     const timeBehind = moment().subtract(minutesAgo, 'minutes').toISOString();
-    const amount = 20;
+    const amount = 30;
     debug("getMonitor request: contents since %d minutes ago: %s (max %d)",
         minutesAgo, timeBehind, amount);
 
