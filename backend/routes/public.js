@@ -175,16 +175,14 @@ async function getRelated(req) {
 
 async function getFlexibleCSV(req) {
     // /api/v2/flexCSV/:query/
-    const MAXENTRY = 2800;
-    const { amount, skip } = params.optionParsing(req.params.paging, MAXENTRY);
 
-    debug("-----  getVideoCSV %s, amount %d skip %d (default %d)", req.params.query, amount, skip, MAXENTRY);
-    const byrelated = await automo.getResultsByQuery({ query: 'soup maker' }); // req.params.query, { amount, skip} );
+    debug("-----  getFlexibleCSV %s", req.params.query);
+    const byrelated = await automo.getResultsByQuery({ query: req.params.query }); 
 
     debug("%d", _.size(byrelated));
 
     const csv = CSV.produceCSVv1(byrelated);
-    const filename = 'searchBy-' + req.params.query + "-" + moment().format("YYYY-MM-DD") + ".csv"
+    const filename = encodeURI('searchBy-' + req.params.query + "-" + moment().format("YYYY-MM-DD") + ".csv");
     debug("VideoCSV: produced %d bytes, returning %s", _.size(csv), filename);
 
     if(!_.size(csv))

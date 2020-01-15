@@ -110,6 +110,12 @@ async function processEvents2(req) {
             incremental: body.incremental,
             packet: i,
         }
+
+        if(supporter.tag && supporter.tag.name) {
+            html.tag = supporter.tag.name;
+            debug("Tagging htmls entry as %s", supporter.tag.name);
+        }
+
         return html;
     });
 

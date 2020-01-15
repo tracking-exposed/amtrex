@@ -193,14 +193,15 @@ async function getResultsByQuery(query) {
             savingTime: -1 }, 2000, 0);
 
     await mongoc.close();
-
     debug("Queries are %d", _.size(related));
 
-   const produced = _.reduce(related, function(memo, e) {
-
+    const produced = _.reduce(related, function(memo, e) {
         const pseudo = utils.string2Food(e.publicKey);
+        const sequence = _.compact(_.map(e.results, function(r) {
+            return _.first(r.price); 
+        }));
+        const acquiredProduct = _.size(sequence);
 
-        const sequence = _.flatten(_.map(e.results, 'price'));
         debug("%j", sequence)
         let avg = 0;
         if(_.size(sequence) > 0) {
@@ -208,34 +209,46 @@ async function getResultsByQuery(query) {
         }
 
         const lines = _.map(e.results, function(r) {
+            /*
             let productId = _.size(r.chunks) ? r.chunks[3] : null;
-
             if(!productId || _.size(productId) != 10) {
                 debug("productId %d %s seems wrong: %s", r.order, e.id, productId);
                 return null;
             }
+            */ 
 
-            return {
+            const retval = {}
+            if(_.size(r.price) == 1) {
+                retval.value = r.price[0];
+                retval.originalPrice = r.price[0];
+                retval.discount = 0;
+            } if(_.size(r.price) == 2) {
+                retval.value = r.price[0];
+                retval.originalPrice = r.price[1];
+                retval.discount = _.round(r.price[1] - r.price[0], 1);
+            } else {
+                debug("price is invalid! %d %s", r.order, e.id);
+                return null;
+            }
+
+            return _.extend(retval, {
                 pseudo,
+                acquiredProduct,
+                searchId: e.id,
                 query: e.query,
-                savingTime: e.savingTime,
-                timeago: moment.duration(moment() - moment(e.savingTime)).humanize(true),
+                savingTime: new Date(e.savingTime),
                 order: r.order,
                 product: r.name,
-                productId,
-                searchId: e.id,
+                // productId,
                 thumbnail: r.thumbnail,
-                rawprice: r.price ? r.price.join('-') : 'N/A',
-                firstprice: r.price ? _.first(r.price) : 'N/A',
                 productLink: r.href,
-    //            average: avg
-            }
+                average: avg
+            });
         });
-
         memo = _.concat(memo, _.compact(lines));
         return memo;
     }, []);
-    return produced;
+    return _.orderBy(produced, ['savingTime', 'order'], ['desc', 'asc']);
 }
 
 async function write(where, what) {
@@ -396,6 +409,8 @@ async function createMetadataEntry(mongoc, html, newsection) {
     exists = {};
     exists.publicKey = html.publicKey;
     exists.savingTime = html.savingTime;
+    if(html.tag)
+        exists.tag = html.tag;
     exists.version = 3;
     exists = _.extend(exists, newsection);
     exists.id = html.metadataId;
