@@ -100,7 +100,7 @@ app.get('/api/v1/product/:query', function(req, res) {
 app.get('/api/v1/related/:query', function(req, res) {
     return dispatchPromise('getRelated', req, res);
 });
-app.get('/api/v2/flexibleCSV/:query', function(req, res) {
+app.get('/api/v2/flexibleCSV/:query/:tag?', function(req, res) {
     return dispatchPromise('getFlexibleCSV', req, res);
 });
 app.get('/api/v1/searchcsv', function(req, res) {

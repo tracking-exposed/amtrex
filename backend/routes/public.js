@@ -174,15 +174,23 @@ async function getRelated(req) {
 };
 
 async function getFlexibleCSV(req) {
-    // /api/v2/flexCSV/:query/
+    // /api/v2/flexCSV/:query/:tag?
+    const query = req.params.query;
+    const tag = req.params.tag;
 
-    debug("-----  getFlexibleCSV %s", req.params.query);
-    const byrelated = await automo.getResultsByQuery({ query: req.params.query }); 
+    if(!query)
+        return { text: "Error, Missing query: 🤷" };
 
-    debug("%d", _.size(byrelated));
+    const filter = { query };
+    if(tag)
+        filter.tag = tag;
 
+    const byrelated = await automo.getResultsByQuery(filter);
+    debug("getFlexibleCSV %j -> %d", filter, _.size(byrelated));
     const csv = CSV.produceCSVv1(byrelated);
-    const filename = encodeURI('searchBy-' + req.params.query + "-" + moment().format("YYYY-MM-DD") + ".csv");
+    const filename = encodeURI('searchBy-' + 
+        req.params.query + "-" + ( tag ? (tag + '-') : '' ) + _.size(byrelated) + ".csv" );
+
     debug("VideoCSV: produced %d bytes, returning %s", _.size(csv), filename);
 
     if(!_.size(csv))

@@ -209,20 +209,21 @@ async function getResultsByQuery(query) {
         const lines = _.map(e.results, function(r) {
             let productId = _.size(r.chunks) ? r.chunks[3] : null;
             if(!productId || _.size(productId) != 10)
-                debug("productId %d %s seems wrong: %s -- error ignored",
-                    r.order, e.id, productId);
+                debug("productId #%d %s broken: %s %s (error ignored)",
+                    r.order, e.id, productId, r.product);
 
             const retval = {}
             if(_.size(r.price) == 1) {
                 retval.value = r.price[0];
                 retval.originalPrice = r.price[0];
                 retval.discount = 0;
-            } if(_.size(r.price) == 2) {
+            } else if(_.size(r.price) == 2) {
                 retval.value = r.price[0];
                 retval.originalPrice = r.price[1];
                 retval.discount = _.round(r.price[1] - r.price[0], 1);
             } else {
-                debug("price is invalid! %d %s", r.order, e.id);
+                debug("price is invalid? (%d) #%d %s %s",
+                    _.size(r.price), r.order, e.id, r.product);
                 return null;
             }
 
