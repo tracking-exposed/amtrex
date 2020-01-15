@@ -200,22 +200,17 @@ async function getResultsByQuery(query) {
         const sequence = _.compact(_.map(e.results, function(r) {
             return _.first(r.price); 
         }));
-        const acquiredProduct = _.size(sequence);
+        const acquiredProducts = _.size(sequence);
 
-        debug("%j", sequence)
-        let avg = 0;
-        if(_.size(sequence) > 0) {
-            avg = _.round(_.sum(sequence) / _.size(sequence), 1);
-        }
+        const avg = (acquiredProducts) ?
+            _.round(_.sum(sequence) / _.size(sequence), 1) :
+            0;
 
         const lines = _.map(e.results, function(r) {
-            /*
             let productId = _.size(r.chunks) ? r.chunks[3] : null;
-            if(!productId || _.size(productId) != 10) {
-                debug("productId %d %s seems wrong: %s", r.order, e.id, productId);
-                return null;
-            }
-            */ 
+            if(!productId || _.size(productId) != 10)
+                debug("productId %d %s seems wrong: %s -- error ignored",
+                    r.order, e.id, productId);
 
             const retval = {}
             if(_.size(r.price) == 1) {
@@ -233,13 +228,13 @@ async function getResultsByQuery(query) {
 
             return _.extend(retval, {
                 pseudo,
-                acquiredProduct,
+                acquiredProducts,
+                productId,
                 searchId: e.id,
                 query: e.query,
                 savingTime: new Date(e.savingTime),
                 order: r.order,
                 product: r.name,
-                // productId,
                 thumbnail: r.thumbnail,
                 productLink: r.href,
                 average: avg
