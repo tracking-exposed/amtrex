@@ -4,6 +4,8 @@ ret = db.metadata.createIndex({"related.name": 1}); checkret('metadata related.n
 ret = db.metadata.createIndex({productName: 1}); checkret('metadata authorName', ret);
 ret = db.metadata.createIndex({savingTime: -1}); checkret('metadata savingTime', ret);
 ret = db.metadata.createIndex({type: 1}); checkret('metadata type', ret);
+ret = db.metadata.createIndex({tag: 1}); checkret('metadata tag', ret);
+ret = db.metadata.createIndex({query: 1}); checkret('metadata query', ret);
 
 ret = db.supporters.createIndex({ publicKey: 1 }, { unique: true }); checkret('supporters publicKey:', ret);
 ret = db.supporters.createIndex({ creationTime: 1 }); checkret('supporters creationTime:', ret);
