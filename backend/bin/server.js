@@ -144,8 +144,8 @@ app.get('/api/v2/personal/:publicKey/selector/:key/:value', (req, res) => {
     return dispatchPromise('getEvidences', req, res);
 });
 
-/* to be check if still relevant */
-app.get('/api/v1/html/:htmlId', function(req, res) {
+/* This allow to download HTMLs based on metadataId, and test parsers locally */
+app.get('/api/v2/html/:metadataId', function(req, res) {
     return dispatchPromise('unitById', req, res);
 });
 

@@ -7,7 +7,6 @@
 const _ = require('lodash');
 const nconf = require('nconf');
 const debug = require('debug')('lib:automo');
-const debugLite = require('debug')('lib:automo:L');
 const moment = require('moment');
 
 const utils = require('../lib/utils');

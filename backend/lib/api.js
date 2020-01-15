@@ -15,9 +15,8 @@ var apiListVersion1 = {
     /* POST from the web-extension */
     processEvents2:   require('../routes/events').processEvents2,
     getMirror:        require('../routes/events').getMirror,
-
-    /* for revision --- to be determined if kept or not */
-    unitById:         require('./htmlunit').unitById,
+    /* for debug parser */
+    unitById:         require('../routes/htmlunit').unitById,
 
     /* TODO: decide if can be resumed
     getSequence:      require('./divergency').getSequence,
