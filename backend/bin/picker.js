@@ -47,6 +47,8 @@ async function main(metadataId) {
     const mongoc = await mongo3.clientConnect({concurrency: 1});
     for (const html of htmls) {
         _.unset(html, 'processed');
+        _.unset(html, '_id');
+
         try {
             await mongo3.writeOne(mongoc, nconf.get('schema').htmls, html);
             debug("Imported html %d %s", html.size, html.tag ? "(" + html.tag + ")" : "" );
